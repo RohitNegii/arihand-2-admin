@@ -1,0 +1,50 @@
+import axios from "axios";
+
+export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+const api = axios.create({
+  baseURL: API_URL
+});
+
+// Auto-inject admin authorization token in headers
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("aurum_admin_token");
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+export const getRequest = async <T = any>(url: string, config = {}): Promise<T> => {
+  return (await api.get<T>(url, config)).data;
+};
+
+export const postRequest = async <T = any>(url: string, data = {}, config = {}): Promise<T> => {
+  return (await api.post<T>(url, data, config)).data;
+};
+
+export const putRequest = async <T = any>(url: string, data = {}, config = {}): Promise<T> => {
+  return (await api.put<T>(url, data, config)).data;
+};
+
+export const patchRequest = async <T = any>(url: string, data = {}, config = {}): Promise<T> => {
+  return (await api.patch<T>(url, data, config)).data;
+};
+
+export const deleteRequest = async <T = any>(url: string, config = {}): Promise<T> => {
+  return (await api.delete<T>(url, config)).data;
+};
+
+export const getImageUrl = (path: string) => {
+  if (!path) return "/emerald_ring.png";
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+  const baseUrl = API_URL.replace("/api", "");
+  return `${baseUrl}${path.startsWith("/") ? "" : "/"}${path}`;
+};
+
+export default api;

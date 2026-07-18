@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+:root {
+  /* Fonts */
+  --font-primary: Inter, system-ui, -apple-system, sans-serif;
+  --font-secondary: "Cormorant Garamond", Georgia, serif;
+
+  /* Colors */
+  --color-primary: #0F4C3A;
+  --color-primary-rgb: 15, 76, 58;
+  --color-secondary: #C8A96A;
+  --color-secondary-rgb: 200, 169, 106;
+  --color-background: #F8F4EA;
+  --color-background-rgb: 248, 244, 234;
+}
+
+@theme {
+  --color-luxury-gold: var(--color-secondary);
+  --color-luxury-bg: var(--color-background);
+  --color-luxury-card: rgba(255, 255, 255, 0.65);
+  --color-luxury-border: rgba(var(--color-primary-rgb), 0.08);
+  --font-serif: var(--font-secondary);
+  --font-sans: var(--font-primary);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-primary);
+  font-family: var(--font-primary);
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-secondary);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* Glassmorphism card utility */
+.glass-card {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.08);
+  box-shadow: 0 8px 32px rgba(var(--color-primary-rgb), 0.05);
+}
+
+/* Global Theme Overrides for Green & Cream admin inputs */
+input, select, textarea {
+  color: var(--color-primary) !important;
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(var(--color-primary-rgb), 0.15) !important;
+}
+
+input::placeholder {
+  color: rgba(var(--color-primary-rgb), 0.4) !important;
+}
+
+/* Form fields nested inside dialogs/cards */
+.glass-card select, .glass-card input, .glass-card textarea {
+  color: var(--color-primary) !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(var(--color-primary-rgb), 0.2) !important;
+}
+
+select option {
+  background-color: var(--color-background) !important;
+  color: var(--color-primary) !important;
+}
+
+label {
+  color: rgba(var(--color-primary-rgb), 0.7) !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-primary) !important;
+}
+
+table th {
+  color: rgba(var(--color-primary-rgb), 0.6) !important;
+  background-color: rgba(var(--color-primary-rgb), 0.04) !important;
+}
+
+table td {
+  color: var(--color-primary) !important;
+}
+
+.font-mono {
+  color: var(--color-primary) !important;
+}
+
+/* Accent borders */
+.border-white\/5, .border-white\/8, .border-white\/10 {
+  border-color: rgba(var(--color-primary-rgb), 0.08) !important;
+}
+
+/* Text transparency helpers */
+.text-white\/40, .text-white\/50, .text-white\/60, .text-white\/70, .text-white\/35 {
+  color: rgba(var(--color-primary-rgb), 0.65) !important;
+}
+
+.accent-luxury-gold {
+  accent-color: var(--color-secondary) !important;
+}
+
+/* Thin custom scrollbar for inner scrollable blocks */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(var(--color-secondary-rgb), 0.4);
+  border-radius: 2px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--color-secondary-rgb), 0.7);
+}

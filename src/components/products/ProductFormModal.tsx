@@ -1,0 +1,797 @@
+import React, { useState, useEffect } from "react";
+import { Upload, Loader2 } from "lucide-react";
+import Modal from "../ui/Modal";
+import { postRequest, putRequest, getImageUrl } from "../../services/api";
+import { getSizeConfigByCategoryName, DEFAULT_SIZE_CONFIG } from "../../config/sizeConfig";
+
+const isVideoUrl = (url: string) => {
+  if (!url) return false;
+  const ext = url.split(".").pop()?.toLowerCase();
+  return ["mp4", "webm", "ogg", "mov"].includes(ext || "");
+};
+
+interface ProductFormModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSaveSuccess: () => void;
+  product: any | null;
+  categories: any[];
+}
+
+export default function ProductFormModal({
+  isOpen,
+  onClose,
+  onSaveSuccess,
+  product,
+  categories
+}: ProductFormModalProps) {
+  // Form Internal States
+  const [name, setName] = useState("");
+  const [sku, setSku] = useState("");
+  const [description, setDescription] = useState("");
+  const [shortDescription, setShortDescription] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [material, setMaterial] = useState("Gold");
+  const [purity, setPurity] = useState("18K");
+  const [stone, setStone] = useState("None");
+  const [weight, setWeight] = useState(0);
+  const [dimensions, setDimensions] = useState("");
+  const [gender, setGender] = useState<"Men" | "Women" | "Unisex">("Unisex");
+  const [occasion, setOccasion] = useState("");
+  const [price, setPrice] = useState(0);
+  const [stock, setStock] = useState(0);
+  const [status, setStatus] = useState<"Draft" | "Published">("Draft");
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [isTrending, setIsTrending] = useState(false);
+  const [isBestSeller, setIsBestSeller] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
+  const [thumbnail, setThumbnail] = useState("");
+  const [sizes, setSizes] = useState<string[]>([]);
+  const [allowCustomSize, setAllowCustomSize] = useState(false);
+  const [newSizeTag, setNewSizeTag] = useState("");
+
+  const handleCategoryChange = (newCatId: string) => {
+    setCategoryId(newCatId);
+    const cat = categories.find((c) => c._id === newCatId);
+    if (cat) {
+      setSizes(cat.sizes || []);
+      setAllowCustomSize(!!cat.allowCustomSize);
+    }
+  };
+
+  const handleToggleStandardSize = (size: string) => {
+    if (sizes.includes(size)) {
+      setSizes(sizes.filter((s) => s !== size));
+    } else {
+      setSizes([...sizes, size]);
+    }
+  };
+
+  const handleAddSizeTag = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const cleanTag = newSizeTag.trim();
+    if (cleanTag && !sizes.includes(cleanTag)) {
+      setSizes([...sizes, cleanTag]);
+      setNewSizeTag("");
+    }
+  };
+
+  const handleRemoveSizeTag = (tag: string) => {
+    setSizes(sizes.filter((s) => s !== tag));
+  };
+
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [imageUploading, setImageUploading] = useState(false);
+
+  // Sync props data to form states
+  useEffect(() => {
+    if (isOpen) {
+      if (product) {
+        setName(product.name || "");
+        setSku(product.sku || "");
+        setDescription(product.description || "");
+        setShortDescription(product.shortDescription || "");
+        setCategoryId(product.category?._id || product.category || categories[0]?._id || "");
+        setMaterial(product.material || "Gold");
+        setPurity(product.purity || "18K");
+        setStone(product.stone || "None");
+        setWeight(product.weight || 0);
+        setDimensions(product.dimensions || "");
+        setGender(product.gender || "Unisex");
+        setOccasion(product.occasion || "");
+        setPrice(product.price || 0);
+        setStock(product.stock || 0);
+        setStatus(product.status || "Draft");
+        setIsFeatured(!!product.isFeatured);
+        setIsTrending(!!product.isTrending);
+        setIsBestSeller(!!product.isBestSeller);
+        setImages(product.images || []);
+        setThumbnail(product.thumbnail || "");
+        setSizes(product.sizes || []);
+        setAllowCustomSize(!!product.allowCustomSize);
+      } else {
+        setName("");
+        setSku("");
+        setDescription("");
+        setShortDescription("");
+        setCategoryId(categories[0]?._id || categories[0] || "");
+        setMaterial("Gold");
+        setPurity("18K");
+        setStone("None");
+        setWeight(0);
+        setDimensions("");
+        setGender("Unisex");
+        setOccasion("");
+        setPrice(0);
+        setStock(0);
+        setStatus("Draft");
+        setIsFeatured(false);
+        setIsTrending(false);
+        setIsBestSeller(false);
+        setImages([]);
+        setThumbnail("");
+        setSizes([]);
+        setAllowCustomSize(false);
+      }
+      setNewSizeTag("");
+      setFormError("");
+    }
+  }, [product, categories, isOpen]);
+
+
+
+  // Image/Media Upload Handler
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    setImageUploading(true);
+    setFormError("");
+    const files = Array.from(e.target.files);
+
+    // Limit to 50MB per file
+    const maxLimit = 50 * 1024 * 1024;
+    const oversized = files.filter((f) => f.size > maxLimit);
+    if (oversized.length > 0) {
+      setFormError("Failed to upload. Some files exceed the maximum limit of 50MB.");
+      setImageUploading(false);
+      return;
+    }
+
+    const formData = new FormData();
+    files.forEach((file) => formData.append("images", file));
+
+    try {
+      const res = await postRequest("/products/upload-images", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      if (res.success) {
+        const uploadedUrls = res.urls;
+        setImages((prev) => {
+          const updated = [...prev, ...uploadedUrls];
+          if (!thumbnail && updated.length > 0) {
+            setThumbnail(updated[0]);
+          }
+          return updated;
+        });
+      }
+    } catch (err: any) {
+      setFormError(err.response?.data?.message || "Failed to upload images to local server storage.");
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
+  // Remove image from list
+  const handleRemoveImage = (urlToRemove: string) => {
+    const updated = images.filter((img) => img !== urlToRemove);
+    setImages(updated);
+    if (thumbnail === urlToRemove) {
+      setThumbnail(updated[0] || "");
+    }
+  };
+
+  // Reorder gallery items
+  const handleDragImage = (index: number, direction: "left" | "right") => {
+    if (direction === "left" && index === 0) return;
+    if (direction === "right" && index === images.length - 1) return;
+
+    const targetIndex = direction === "left" ? index - 1 : index + 1;
+    const updated = [...images];
+    const temp = updated[index];
+    updated[index] = updated[targetIndex];
+    updated[targetIndex] = temp;
+    setImages(updated);
+  };
+
+  // Submit product creation/editing payload
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Check mandatory constraints
+    if (!name || !sku || !price || !categoryId || !material || !purity || !stone || weight === undefined) {
+      setFormError("Please fill in all required fields (Name, SKU, Category, Price, Material, Purity, Stone, and Weight).");
+      return;
+    }
+
+    if (price <= 0) {
+      setFormError("Base price must be greater than 0.");
+      return;
+    }
+
+
+
+    if (weight <= 0) {
+      setFormError("Product weight must be greater than 0g.");
+      return;
+    }
+
+    if (stock < 0) {
+      setFormError("Stock quantity cannot be negative.");
+      return;
+    }
+
+    setFormLoading(true);
+    setFormError("");
+
+    const payload = {
+      name,
+      sku: sku.toUpperCase().trim(),
+      description,
+      shortDescription,
+      categoryId,
+      material,
+      purity,
+      stone,
+      weight,
+      dimensions,
+      gender,
+      occasion,
+      price,
+      stock,
+      status,
+      isFeatured,
+      isTrending,
+      isBestSeller,
+      images,
+      thumbnail,
+      sizes,
+      allowCustomSize
+    };
+
+    try {
+      if (!product) {
+        // Create Product
+        await postRequest("/products", payload);
+      } else {
+        // Edit Product
+        await putRequest(`/products/${product._id}`, payload);
+      }
+      onSaveSuccess();
+    } catch (err: any) {
+      setFormError(err.response?.data?.message || "Failed to save product details.");
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={!product ? "Create Fine Masterpiece" : "Edit Jewelry Details"}
+      subtitle="fine catalog"
+      maxWidthClassName="max-w-4xl"
+      scrollable={false}
+    >
+      {formError && (
+        <div className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-[10px] uppercase tracking-wider font-semibold shrink-0">
+          {formError}
+        </div>
+      )}
+
+      {/* Form wrapping body & footer */}
+      <form onSubmit={handleFormSubmit} className="flex flex-col flex-1 min-h-0">
+        
+        {/* Scrollable Form Body */}
+        <div className="space-y-6 flex-1 overflow-y-auto pr-3 pb-4 custom-scrollbar">
+          
+          {/* Section 1: Core Specifications */}
+          <div>
+            <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#0F4C3A]/10 pb-1.5 mb-4 font-bold">
+              1. Core Specifications
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Item Name */}
+              <div className="md:col-span-2">
+                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Item Name *</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                  required
+                />
+              </div>
+              {/* SKU Code */}
+              <div>
+                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">SKU Code *</label>
+                <input
+                  type="text"
+                  value={sku}
+                  onChange={(e) => setSku(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden font-mono uppercase"
+                  placeholder="SOL-EM-PND"
+                  required
+                />
+              </div>
+              {/* Category */}
+              <div>
+                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Category *</label>
+                <select
+                  value={categoryId}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                  required
+                >
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+              {/* Status */}
+              <div>
+                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Publish Status</label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as any)}
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                >
+                  <option value="Draft">Draft</option>
+                  <option value="Published">Published</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Valuation & Stock */}
+          <div>
+            <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#0F4C3A]/10 pb-1.5 mb-4 font-bold">
+              2. Valuation & Stock
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Base Price */}
+              <div>
+                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Base Price (INR) *</label>
+                <input
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden font-mono"
+                  required
+                />
+              </div>
+              {/* Stock Qty */}
+              <div>
+                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Stock Qty *</label>
+                <input
+                  type="number"
+                  value={stock}
+                  onChange={(e) => setStock(parseInt(e.target.value) || 0)}
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden font-mono"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Craftsmanship Specs */}
+          <div>
+            <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#0F4C3A]/10 pb-1.5 mb-4 font-bold">
+              3. Craftsmanship Specs
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {/* Metal Type */}
+              <div>
+                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Metal Type *</label>
+                <select
+                  value={material}
+                  onChange={(e) => setMaterial(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                  required
+                >
+                  {!["Gold", "Platinum", "Silver", "Rose Gold", "White Gold", "Brass"].includes(material) && material && (
+                    <option value={material}>{material}</option>
+                  )}
+                  {["Gold", "Platinum", "Silver", "Rose Gold", "White Gold", "Brass"].map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+              {/* Purity */}
+              <div>
+                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Purity *</label>
+                <select
+                  value={purity}
+                  onChange={(e) => setPurity(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                  required
+                >
+                  {!["18K", "22K", "14K", "24K", "950 Platinum", "925 Sterling Silver"].includes(purity) && purity && (
+                    <option value={purity}>{purity}</option>
+                  )}
+                  {["18K", "22K", "14K", "24K", "950 Platinum", "925 Sterling Silver"].map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+              {/* Gemstone */}
+              <div>
+                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Gemstone *</label>
+                <select
+                  value={stone}
+                  onChange={(e) => setStone(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                  required
+                >
+                  {!["None", "Diamond", "Emerald", "Ruby", "Sapphire", "Amethyst", "Pearl", "Aquamarine", "Opal"].includes(stone) && stone && (
+                    <option value={stone}>{stone}</option>
+                  )}
+                  {["None", "Diamond", "Emerald", "Ruby", "Sapphire", "Amethyst", "Pearl", "Aquamarine", "Opal"].map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+              {/* Weight */}
+              <div>
+                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Weight (g) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={weight}
+                  onChange={(e) => setWeight(parseFloat(e.target.value) || 0)}
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden font-mono"
+                  required
+                />
+              </div>
+              {/* Dimensions */}
+              <div>
+                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Dimensions</label>
+                <input
+                  type="text"
+                  value={dimensions}
+                  onChange={(e) => setDimensions(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                  placeholder="8mm x 8mm"
+                />
+              </div>
+              {/* Gender */}
+              <div>
+                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Gender</label>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value as any)}
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                >
+                  <option value="Unisex">Unisex</option>
+                  <option value="Men">Men</option>
+                  <option value="Women">Women</option>
+                </select>
+              </div>
+              {/* Occasion */}
+              <div className="col-span-2">
+                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Occasion</label>
+                <input
+                  type="text"
+                  value={occasion}
+                  onChange={(e) => setOccasion(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                  placeholder="Wedding, Festive"
+                />
+              </div>
+            </div>
+
+            {/* Marketing / Flags Checkboxes */}
+            <div className="flex flex-wrap gap-6 bg-[#0F4C3A]/3 p-3.5 rounded-xl border border-[#0F4C3A]/8 font-mono text-[9px] uppercase tracking-wider mt-4">
+              <label className="flex items-center gap-2 select-none cursor-pointer font-bold text-[#0F4C3A]">
+                <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} className="accent-luxury-gold" />
+                Featured Masterpiece
+              </label>
+              <label className="flex items-center gap-2 select-none cursor-pointer font-bold text-[#0F4C3A]">
+                <input type="checkbox" checked={isTrending} onChange={(e) => setIsTrending(e.target.checked)} className="accent-luxury-gold" />
+                Trending Design
+              </label>
+              <label className="flex items-center gap-2 select-none cursor-pointer font-bold text-[#0F4C3A]">
+                <input type="checkbox" checked={isBestSeller} onChange={(e) => setIsBestSeller(e.target.checked)} className="accent-luxury-gold" />
+                Best Seller
+              </label>
+            </div>
+          </div>
+
+          {/* Section 4: Product Size Settings */}
+          {(() => {
+            const activeCategory = categories.find((cat) => cat._id === categoryId);
+            const sizeConfig = activeCategory ? getSizeConfigByCategoryName(activeCategory.name) : DEFAULT_SIZE_CONFIG;
+            const shouldShowSection = !sizeConfig.defaultHidden || allowCustomSize;
+
+            if (shouldShowSection) {
+              return (
+                <div>
+                  <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#0F4C3A]/10 pb-1.5 mb-4 font-bold">
+                    4. Product Size Settings ({sizeConfig.label})
+                  </h3>
+                  
+                  <div className="space-y-4 bg-[#0F4C3A]/3 p-4 rounded-xl border border-[#0F4C3A]/8 text-left">
+                    {sizeConfig.hasStandardSizes && (
+                      <div>
+                        <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-2 font-bold">
+                          Select Available Standard Sizes
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {sizeConfig.standardSizes.map((size) => {
+                            const isSelected = sizes.includes(size);
+                            return (
+                              <button
+                                type="button"
+                                key={size}
+                                onClick={() => handleToggleStandardSize(size)}
+                                className={`px-3 py-1.5 border text-[10px] tracking-wider font-bold rounded-lg transition-all cursor-pointer ${
+                                  isSelected
+                                    ? "bg-luxury-gold border-luxury-gold text-black font-bold"
+                                    : "border-[#0F4C3A]/15 text-[#0F4C3A]/80 hover:border-luxury-gold bg-white/20"
+                                }`}
+                              >
+                                {size}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {sizeConfig.customSizesAsTags && (
+                      <div>
+                        <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">
+                          Add Custom Sizes / Options
+                        </label>
+                        <div className="flex gap-2 mb-3">
+                          <input
+                            type="text"
+                            value={newSizeTag}
+                            onChange={(e) => setNewSizeTag(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleAddSizeTag();
+                              }
+                            }}
+                            placeholder="E.g. XS, 8.5, Custom Size Tag"
+                            className="flex-1 px-3 py-1.5 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleAddSizeTag()}
+                            className="bg-luxury-gold hover:opacity-90 text-black px-4 py-1.5 rounded-lg text-[10px] tracking-wider uppercase font-bold transition-all cursor-pointer"
+                          >
+                            Add
+                          </button>
+                        </div>
+
+                        {sizes.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {sizes.map((tag) => (
+                              <span
+                                key={tag}
+                                className="inline-flex items-center gap-1.5 bg-[#0F4C3A]/10 border border-[#0F4C3A]/15 text-[#0F4C3A] px-2.5 py-1 rounded-lg text-[10px] font-bold"
+                              >
+                                {tag}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveSizeTag(tag)}
+                                  className="text-red-600 hover:text-red-800 font-bold ml-1 text-xs"
+                                >
+                                  &times;
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-[9px] uppercase tracking-wider text-[#0F4C3A]/30 italic">No custom sizes defined yet.</p>
+                        )}
+                      </div>
+                    )}
+
+                    {sizeConfig.allowCustomSizeOption && (
+                      <div className="flex items-center gap-2 select-none cursor-pointer font-bold text-[#0F4C3A] font-mono text-[9px] uppercase tracking-wider mt-2">
+                        <label className="flex items-center gap-2 select-none cursor-pointer font-bold">
+                          <input
+                            type="checkbox"
+                            checked={allowCustomSize}
+                            onChange={(e) => setAllowCustomSize(e.target.checked)}
+                            className="accent-luxury-gold"
+                          />
+                          Allow Custom Sizes (Customers can specify their own custom sizes/lengths)
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            } else {
+              return (
+                <div>
+                  <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#0F4C3A]/10 pb-1.5 mb-4 font-bold">
+                    4. Product Size Settings
+                  </h3>
+                  <div className="bg-[#0F4C3A]/3 p-4 rounded-xl border border-[#0F4C3A]/8 text-left font-mono text-[9px] uppercase tracking-wider">
+                    <label className="flex items-center gap-2 select-none cursor-pointer font-bold text-[#0F4C3A]">
+                      <input
+                        type="checkbox"
+                        checked={allowCustomSize}
+                        onChange={(e) => setAllowCustomSize(e.target.checked)}
+                        className="accent-luxury-gold"
+                      />
+                      Enable custom size selection for Earrings
+                    </label>
+                  </div>
+                </div>
+              );
+            }
+          })()}
+
+          {/* Section 5: Artisan Storytelling */}
+          <div>
+            <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#0F4C3A]/10 pb-1.5 mb-4 font-bold">
+              5. Artisan Storytelling
+            </h3>
+            <div className="space-y-4">
+              {/* Short Description */}
+              <div>
+                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Short Description *</label>
+                <input
+                  type="text"
+                  value={shortDescription}
+                  onChange={(e) => setShortDescription(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                  required
+                />
+              </div>
+              {/* Long Description */}
+              <div>
+                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Long Description</label>
+                <textarea
+                  rows={3}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 6: Gallery Manager */}
+          <div>
+            <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#0F4C3A]/10 pb-1.5 mb-4 font-bold">
+              6. Gallery Manager
+            </h3>
+            
+            {/* Images Manager */}
+            <div className="border border-[#0F4C3A]/10 p-4 rounded-xl space-y-4 bg-[#0F4C3A]/3">
+              <div className="flex justify-between items-center border-b border-[#0F4C3A]/10 pb-3">
+                <span className="text-[9px] tracking-wider uppercase font-mono font-bold text-[#0F4C3A]/60">Gallery Images</span>
+                <div className="relative">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*,video/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="gallery-file-upload"
+                  />
+                  <label
+                    htmlFor="gallery-file-upload"
+                    className="flex items-center gap-1.5 border border-[#0F4C3A]/15 hover:border-luxury-gold px-4 py-2 rounded-full text-[9px] uppercase tracking-wider font-bold transition-all cursor-pointer text-[#0F4C3A] hover:bg-white/40"
+                  >
+                    <Upload className="w-3.5 h-3.5" /> Upload Media
+                  </label>
+                </div>
+              </div>
+
+              {images.length === 0 && !imageUploading ? (
+                <p className="text-[9.5px] uppercase tracking-wider text-[#0F4C3A]/30 text-center py-4">No images loaded yet.</p>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
+                  {images.map((url, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-lg border border-[#0F4C3A]/15 bg-white/30 flex items-center justify-center p-2 group">
+                      {isVideoUrl(url) ? (
+                        <video src={getImageUrl(url)} className="max-h-full max-w-full object-contain" muted playsInline />
+                      ) : (
+                        <img src={getImageUrl(url)} alt={`Gallery ${idx}`} className="max-h-full max-w-full object-contain" />
+                      )}
+                      
+                      {/* Overlay commands */}
+                      <div className="absolute inset-0 bg-[#0F4C3A]/90 opacity-0 group-hover:opacity-100 flex flex-col justify-between p-1.5 transition-all rounded-lg">
+                        <div className="flex justify-between items-center w-full">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(url)}
+                            className="text-red-300 hover:text-red-200 font-bold text-[8.5px] uppercase"
+                          >
+                            Delete
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setThumbnail(url)}
+                            className={`text-[8px] uppercase tracking-wider border rounded-sm px-1.5 py-0.5 ${
+                              thumbnail === url ? "bg-luxury-gold border-luxury-gold text-[#0F4C3A] font-bold" : "border-[#0F4C3A]/20 text-white/70"
+                            }`}
+                          >
+                            Thumb
+                          </button>
+                        </div>
+                        <div className="flex justify-between items-center w-full mt-auto">
+                          <button
+                            type="button"
+                            onClick={() => handleDragImage(idx, "left")}
+                            disabled={idx === 0}
+                            className="text-white hover:text-luxury-gold text-[10px] font-bold disabled:opacity-20"
+                          >
+                            ←
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDragImage(idx, "right")}
+                            disabled={idx === images.length - 1}
+                            className="text-white hover:text-luxury-gold text-[10px] font-bold disabled:opacity-20"
+                          >
+                            →
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {imageUploading && (
+                    <div className="relative aspect-square rounded-lg border border-luxury-gold/30 border-dashed bg-luxury-gold/5 flex flex-col items-center justify-center p-2">
+                      <Loader2 className="w-5 h-5 animate-spin text-luxury-gold mb-1" />
+                      <span className="text-[8px] uppercase tracking-wider text-luxury-gold font-bold">Uploading...</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+        </div>
+
+        {/* Submit Buttons Footer (Fixed) */}
+        <div className="flex justify-end gap-3 pt-4 border-t border-[#0F4C3A]/10 mt-4 shrink-0 bg-transparent">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-2.5 rounded-full border border-[#0F4C3A]/15 hover:border-luxury-gold text-[#0F4C3A] hover:text-[#0F4C3A] text-[9px] tracking-wider uppercase font-semibold transition-colors cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={formLoading || imageUploading}
+            className="bg-luxury-gold hover:opacity-90 text-[#0F4C3A] px-6 py-2.5 rounded-full text-[9px] tracking-wider uppercase font-bold flex items-center justify-center gap-1.5 shadow-md cursor-pointer disabled:opacity-50"
+          >
+            {formLoading ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving Masterpiece...
+              </>
+            ) : imageUploading ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading Images...
+              </>
+            ) : (
+              "Save Masterpiece"
+            )}
+          </button>
+        </div>
+
+      </form>
+    </Modal>
+  );
+}
