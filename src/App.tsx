@@ -8,6 +8,7 @@ import Orders from "./pages/Orders";
 import ContactInquiries from "./pages/ContactInquiries";
 import Users from "./pages/Users";
 import FAQs from "./pages/FAQs";
+import Settings from "./pages/Settings";
 import { Toaster } from "sonner";
 
 // Protected Layout Route wrapper
@@ -48,6 +49,7 @@ export default function App() {
           <Route path="/users" element={<Users />} />
           <Route path="/faqs" element={<FAQs />} />
           <Route path="/contact" element={<ContactInquiries />} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
 
         {/* Fallback Catch-all redirect */}

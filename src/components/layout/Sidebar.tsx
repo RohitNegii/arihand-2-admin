@@ -8,7 +8,8 @@ import {
   Sparkles,
   Mail,
   Users as UsersIcon,
-  HelpCircle
+  HelpCircle,
+  Settings as SettingsIcon
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -22,7 +23,8 @@ export default function Sidebar() {
     { name: "Orders", path: "/orders", icon: FileText },
     { name: "Patrons Directory", path: "/users", icon: UsersIcon },
     { name: "FAQs Manager", path: "/faqs", icon: HelpCircle },
-    { name: "Contact Messages", path: "/contact", icon: Mail }
+    { name: "Contact Messages", path: "/contact", icon: Mail },
+    { name: "Settings", path: "/settings", icon: SettingsIcon }
   ];
 
   const handleLogout = () => {

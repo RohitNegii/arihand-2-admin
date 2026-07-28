@@ -33,7 +33,6 @@ export default function ProductFormModal({
   const [categoryId, setCategoryId] = useState("");
   const [material, setMaterial] = useState("Gold");
   const [purity, setPurity] = useState("18K");
-  const [stone, setStone] = useState("None");
   const [weight, setWeight] = useState(0);
   const [dimensions, setDimensions] = useState("");
   const [gender, setGender] = useState<"Men" | "Women" | "Unisex">("Unisex");
@@ -48,6 +47,8 @@ export default function ProductFormModal({
   const [thumbnail, setThumbnail] = useState("");
   const [sizes, setSizes] = useState<string[]>([]);
   const [allowCustomSize, setAllowCustomSize] = useState(false);
+  const [hasVariants, setHasVariants] = useState(false);
+  const [variants, setVariants] = useState<any[]>([]);
   const [newSizeTag, setNewSizeTag] = useState("");
 
   const handleCategoryChange = (newCatId: string) => {
@@ -95,7 +96,6 @@ export default function ProductFormModal({
         setCategoryId(product.category?._id || product.category || categories[0]?._id || "");
         setMaterial(product.material || "Gold");
         setPurity(product.purity || "18K");
-        setStone(product.stone || "None");
         setWeight(product.weight || 0);
         setDimensions(product.dimensions || "");
         setGender(product.gender || "Unisex");
@@ -110,6 +110,8 @@ export default function ProductFormModal({
         setThumbnail(product.thumbnail || "");
         setSizes(product.sizes || []);
         setAllowCustomSize(!!product.allowCustomSize);
+        setHasVariants(!!product.hasVariants);
+        setVariants(product.variants || []);
       } else {
         setName("");
         setSku("");
@@ -118,7 +120,6 @@ export default function ProductFormModal({
         setCategoryId(categories[0]?._id || categories[0] || "");
         setMaterial("Gold");
         setPurity("18K");
-        setStone("None");
         setWeight(0);
         setDimensions("");
         setGender("Unisex");
@@ -133,6 +134,8 @@ export default function ProductFormModal({
         setThumbnail("");
         setSizes([]);
         setAllowCustomSize(false);
+        setHasVariants(false);
+        setVariants([]);
       }
       setNewSizeTag("");
       setFormError("");
@@ -208,26 +211,54 @@ export default function ProductFormModal({
     e.preventDefault();
 
     // Check mandatory constraints
-    if (!name || !sku || !price || !categoryId || !material || !purity || !stone || weight === undefined) {
-      setFormError("Please fill in all required fields (Name, SKU, Category, Price, Material, Purity, Stone, and Weight).");
+    const isPriceRequired = !hasVariants;
+    if (
+      !name ||
+      !sku ||
+      (isPriceRequired && (price === undefined || price === null)) ||
+      !categoryId ||
+      !material ||
+      !purity ||
+      weight === undefined
+    ) {
+      setFormError("Please fill in all required fields (Name, SKU, Category, Price, Material, Purity, and Weight).");
       return;
     }
 
-    if (price <= 0) {
+    if (isPriceRequired && price <= 0) {
       setFormError("Base price must be greater than 0.");
       return;
     }
-
-
 
     if (weight <= 0) {
       setFormError("Product weight must be greater than 0g.");
       return;
     }
 
-    if (stock < 0) {
+    if (!hasVariants && stock < 0) {
       setFormError("Stock quantity cannot be negative.");
       return;
+    }
+
+    if (hasVariants) {
+      if (variants.length === 0) {
+        setFormError("Please add at least one variant option if variants are enabled.");
+        return;
+      }
+      for (const v of variants) {
+        if (!v.name || !v.name.trim()) {
+          setFormError("All variants must have a name.");
+          return;
+        }
+        if (v.price <= 0) {
+          setFormError(`Price for variant '${v.name}' must be greater than 0.`);
+          return;
+        }
+        if (v.stock < 0) {
+          setFormError(`Stock for variant '${v.name}' cannot be negative.`);
+          return;
+        }
+      }
     }
 
     setFormLoading(true);
@@ -241,13 +272,12 @@ export default function ProductFormModal({
       categoryId,
       material,
       purity,
-      stone,
       weight,
       dimensions,
       gender,
       occasion,
-      price,
-      stock,
+      price: hasVariants ? undefined : price,
+      stock: hasVariants ? 0 : stock,
       status,
       isFeatured,
       isTrending,
@@ -255,7 +285,9 @@ export default function ProductFormModal({
       images,
       thumbnail,
       sizes,
-      allowCustomSize
+      allowCustomSize,
+      hasVariants,
+      variants
     };
 
     try {
@@ -360,27 +392,148 @@ export default function ProductFormModal({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Base Price */}
-              <div>
-                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Base Price (INR) *</label>
-                <input
-                  type="number"
-                  value={price}
-                  onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden font-mono"
-                  required
-                />
-              </div>
+              {!hasVariants && (
+                <div>
+                  <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Base Price (INR) *</label>
+                  <input
+                    type="number"
+                    value={price}
+                    onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
+                    className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden font-mono"
+                    required
+                  />
+                </div>
+              )}
               {/* Stock Qty */}
-              <div>
+              <div className={hasVariants ? "md:col-span-2" : ""}>
                 <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Stock Qty *</label>
                 <input
                   type="number"
                   value={stock}
                   onChange={(e) => setStock(parseInt(e.target.value) || 0)}
                   className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden font-mono"
-                  required
+                  required={!hasVariants}
+                  disabled={hasVariants}
                 />
               </div>
+            </div>
+            
+            {/* Product Variants Section */}
+            <div className="mt-6 p-4 rounded-xl border border-[#0F4C3A]/10 bg-[#0F4C3A]/3 space-y-4 text-left">
+              <label className="flex items-center gap-2 select-none cursor-pointer font-bold text-[#0F4C3A] font-mono text-[9px] uppercase tracking-wider">
+                <input
+                  type="checkbox"
+                  checked={hasVariants}
+                  onChange={(e) => setHasVariants(e.target.checked)}
+                  className="accent-luxury-gold"
+                />
+                Enable Product Variants (e.g. custom pricing and stock overrides)
+              </label>
+
+              {hasVariants && (
+                <div className="space-y-3 pt-2">
+                  <div className="flex justify-between items-center border-b border-[#0F4C3A]/10 pb-2">
+                    <span className="text-[9px] uppercase tracking-wider font-bold text-luxury-gold">Product Variants List</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setVariants([
+                          ...variants,
+                          { name: "Option A", price: price || 0, stock: stock || 0, sku: sku ? `${sku}-A` : "" }
+                        ]);
+                      }}
+                      className="bg-[#0F4C3A] hover:bg-[#0F4C3A]/90 text-white hover:text-luxury-gold px-3 py-1 rounded-md text-[8.5px] uppercase tracking-wider font-bold transition-all cursor-pointer"
+                    >
+                      + Add Variant Row
+                    </button>
+                  </div>
+
+                  {variants.length === 0 ? (
+                    <p className="text-[9px] uppercase tracking-wider text-[#0F4C3A]/40 italic py-2">No variants added yet. Click + Add Variant Row above.</p>
+                  ) : (
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                      {variants.map((v, index) => (
+                        <div key={index} className="grid grid-cols-12 gap-2 items-center bg-white/20 p-2.5 rounded-lg border border-[#0F4C3A]/10">
+                          {/* Option Name */}
+                          <div className="col-span-3">
+                            <label className="block text-[7px] uppercase text-[#0F4C3A]/60 font-bold mb-1">Option Name *</label>
+                            <input
+                              type="text"
+                              value={v.name}
+                              onChange={(e) => {
+                                const newVars = [...variants];
+                                newVars[index].name = e.target.value;
+                                setVariants(newVars);
+                              }}
+                              placeholder="e.g. Option A"
+                              className="w-full px-2 py-1 rounded bg-[#faf7f2] border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                              required
+                            />
+                          </div>
+                          {/* Price override */}
+                          <div className="col-span-3">
+                            <label className="block text-[7px] uppercase text-[#0F4C3A]/60 font-bold mb-1">Price (INR) *</label>
+                            <input
+                              type="number"
+                              value={v.price}
+                              onChange={(e) => {
+                                const newVars = [...variants];
+                                newVars[index].price = parseFloat(e.target.value) || 0;
+                                setVariants(newVars);
+                              }}
+                              className="w-full px-2 py-1 rounded bg-[#faf7f2] border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden font-mono"
+                              required
+                            />
+                          </div>
+                          {/* Stock override */}
+                          <div className="col-span-2">
+                            <label className="block text-[7px] uppercase text-[#0F4C3A]/60 font-bold mb-1">Stock *</label>
+                            <input
+                              type="number"
+                              value={v.stock}
+                              onChange={(e) => {
+                                const newVars = [...variants];
+                                newVars[index].stock = parseInt(e.target.value) || 0;
+                                setVariants(newVars);
+                              }}
+                              className="w-full px-2 py-1 rounded bg-[#faf7f2] border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden font-mono"
+                              required
+                            />
+                          </div>
+                          {/* SKU override */}
+                          <div className="col-span-3">
+                            <label className="block text-[7px] uppercase text-[#0F4C3A]/60 font-bold mb-1">SKU Override</label>
+                            <input
+                              type="text"
+                              value={v.sku || ""}
+                              onChange={(e) => {
+                                const newVars = [...variants];
+                                newVars[index].sku = e.target.value.toUpperCase();
+                                setVariants(newVars);
+                              }}
+                              placeholder="e.g. SKU-A"
+                              className="w-full px-2 py-1 rounded bg-[#faf7f2] border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden font-mono"
+                            />
+                          </div>
+                          {/* Delete */}
+                          <div className="col-span-1 pt-3.5 text-center">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setVariants(variants.filter((_, i) => i !== index));
+                              }}
+                              className="text-red-600 hover:text-red-800 text-xs font-bold cursor-pointer"
+                              title="Remove Variant"
+                            >
+                              &times;
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -389,7 +542,7 @@ export default function ProductFormModal({
             <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#0F4C3A]/10 pb-1.5 mb-4 font-bold">
               3. Craftsmanship Specs
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {/* Metal Type */}
               <div>
                 <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Metal Type *</label>
@@ -420,23 +573,6 @@ export default function ProductFormModal({
                     <option value={purity}>{purity}</option>
                   )}
                   {["18K", "22K", "14K", "24K", "950 Platinum", "925 Sterling Silver"].map((opt) => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </select>
-              </div>
-              {/* Gemstone */}
-              <div>
-                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Gemstone *</label>
-                <select
-                  value={stone}
-                  onChange={(e) => setStone(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
-                  required
-                >
-                  {!["None", "Diamond", "Emerald", "Ruby", "Sapphire", "Amethyst", "Pearl", "Aquamarine", "Opal"].includes(stone) && stone && (
-                    <option value={stone}>{stone}</option>
-                  )}
-                  {["None", "Diamond", "Emerald", "Ruby", "Sapphire", "Amethyst", "Pearl", "Aquamarine", "Opal"].map((opt) => (
                     <option key={opt} value={opt}>{opt}</option>
                   ))}
                 </select>
@@ -478,7 +614,7 @@ export default function ProductFormModal({
                 </select>
               </div>
               {/* Occasion */}
-              <div className="col-span-2">
+              <div>
                 <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Occasion</label>
                 <input
                   type="text"

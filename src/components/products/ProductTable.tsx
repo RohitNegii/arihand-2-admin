@@ -58,28 +58,42 @@ export default function ProductTable({
     {
       header: "Value",
       className: "font-mono",
-      render: (prod: any) => (
-        <div className="text-left font-semibold text-white">
-          INR {prod.price.toLocaleString()}
-        </div>
-      )
+      render: (prod: any) => {
+        let priceStr = "N/A";
+        if (prod.hasVariants && prod.variants && prod.variants.length > 0) {
+          const prices = prod.variants.map((v: any) => v.price);
+          const minPrice = Math.min(...prices);
+          priceStr = `From INR ${minPrice.toLocaleString()}`;
+        } else if (prod.price !== undefined && prod.price !== null) {
+          priceStr = `INR ${prod.price.toLocaleString()}`;
+        }
+        return (
+          <div className="text-left font-semibold text-[#0F4C3A]">
+            {priceStr}
+          </div>
+        );
+      }
     },
     {
       header: "Stock",
       className: "font-mono",
       render: (prod: any) => {
+        let stockVal = prod.stock;
+        if (prod.hasVariants && prod.variants) {
+          stockVal = prod.variants.reduce((sum: number, v: any) => sum + (v.stock || 0), 0);
+        }
         let stockLabel = "In Stock";
         let colorClass = "text-emerald-400";
-        if (prod.stock === 0) {
+        if (stockVal === 0) {
           stockLabel = "Out of Stock";
           colorClass = "text-red-400";
-        } else if (prod.stock <= 5) {
+        } else if (stockVal <= 5) {
           stockLabel = "Low Stock";
           colorClass = "text-amber-400";
         }
         return (
           <div className="text-left">
-            <span className="text-white font-medium">{prod.stock} items</span><br />
+            <span className="text-[#0F4C3A] font-medium">{stockVal} items</span><br />
             <span className={`text-[8px] uppercase tracking-wider font-bold ${colorClass}`}>{stockLabel}</span>
           </div>
         );

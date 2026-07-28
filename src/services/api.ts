@@ -6,7 +6,6 @@ const api = axios.create({
   baseURL: API_URL
 });
 
-// Auto-inject admin authorization token in headers
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("aurum_admin_token");
@@ -16,6 +15,21 @@ api.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+// Auto-handle 401 Unauthorized responses (session expired / user deleted)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      const isLoginEndpoint = error.config && error.config.url && error.config.url.includes("/login");
+      if (!isLoginEndpoint) {
+        localStorage.removeItem("aurum_admin_token");
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(error);
+  }
 );
 
 export const getRequest = async <T = any>(url: string, config = {}): Promise<T> => {

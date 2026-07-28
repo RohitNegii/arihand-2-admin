@@ -20,6 +20,7 @@ import {
   CartesianGrid
 } from "recharts";
 import { getRequest } from "../services/api";
+import Table from "../components/ui/Table";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -67,6 +68,65 @@ export default function Dashboard() {
     );
   }
 
+  const recentOrdersColumns = [
+    {
+      header: "Order",
+      className: "font-mono font-bold text-white",
+      render: (order: any) => <span>#{order.orderNumber.split("-")[1] || order.orderNumber}</span>
+    },
+    {
+      header: "Customer",
+      render: (order: any) => <span>{order.customer?.name || "Anonymous"}</span>
+    },
+    {
+      header: "Total",
+      className: "font-mono text-white",
+      render: (order: any) => <span>INR {order.grandTotal.toLocaleString()}</span>
+    },
+    {
+      header: "Status",
+      render: (order: any) => (
+        <span className={`text-[8.5px] font-bold uppercase tracking-wider ${
+          order.orderStatus === "Delivered" ? "text-emerald-500" : "text-luxury-gold"
+        }`}>
+          {order.orderStatus}
+        </span>
+      )
+    }
+  ];
+
+  const lowStockColumns = [
+    {
+      header: "SKU",
+      className: "font-mono font-bold text-red-500",
+      render: (prod: any) => <span>{prod.sku}</span>
+    },
+    {
+      header: "Product Name",
+      className: "truncate max-w-xs",
+      render: (prod: any) => <span>{prod.name}</span>
+    },
+    {
+      header: "Stock",
+      className: "font-bold text-red-500",
+      render: (prod: any) => (
+        <span className="flex items-center gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5" /> {prod.stock} units
+        </span>
+      )
+    },
+    {
+      header: "Status",
+      render: (prod: any) => (
+        <span className={`text-[8.5px] font-bold uppercase tracking-wider ${
+          prod.status === "Published" ? "text-emerald-500" : "opacity-40"
+        }`}>
+          {prod.status}
+        </span>
+      )
+    }
+  ];
+
   const kpis = [
     { name: "Total Revenue", val: `INR ${(stats?.revenue || 0).toLocaleString()}`, icon: TrendingUp, color: "text-emerald-400" },
     { name: "Orders Mapped", val: stats?.totalOrders || 0, icon: ShoppingBag, color: "text-[#ff5a1f]" },
@@ -83,7 +143,7 @@ export default function Dashboard() {
           <div key={kpi.name} className="glass-card rounded-2xl p-6 flex items-center justify-between">
             <div>
               <span className="text-[8.5px] uppercase tracking-widest text-white/40 font-semibold">{kpi.name}</span>
-              <p className="text-xl font-serif font-bold text-white mt-1.5 leading-none">{kpi.val}</p>
+              <p className="text-xl font-serif font-bold text-[#0F4C3A] mt-1.5 leading-none">{kpi.val}</p>
             </div>
             <div className={`w-10 h-10 rounded-full bg-white/3 flex items-center justify-center border border-white/5 ${kpi.color}`}>
               <kpi.icon className="w-5 h-5" />
@@ -147,10 +207,10 @@ export default function Dashboard() {
                 <div key={prod._id} className="flex justify-between items-center bg-white/2 p-3 rounded-xl border border-white/5 font-mono text-[10px]">
                   <div className="flex items-center gap-3">
                     <span className="text-[#ff5a1f] font-bold">#{idx + 1}</span>
-                    <span className="text-white font-medium line-clamp-1">{prod.name}</span>
+                    <span className="text-[#0F4C3A] font-medium line-clamp-1">{prod.name}</span>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className="text-white">{prod.quantitySold} sold</span><br />
+                    <span className="text-[#0F4C3A]">{prod.quantitySold} sold</span><br />
                     <span className="text-white/30 text-[8.5px]">INR {prod.revenueGenerated.toLocaleString()}</span>
                   </div>
                 </div>
@@ -165,8 +225,8 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Recent Orders logger */}
-        <div className="glass-card rounded-2xl p-6">
-          <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-between items-center px-2">
             <div>
               <span className="text-[8px] uppercase tracking-widest text-luxury-gold font-bold font-mono">recent registries</span>
               <h2 className="font-serif text-lg text-white mt-1">Pending & New Orders</h2>
@@ -176,45 +236,17 @@ export default function Dashboard() {
             </Link>
           </div>
 
-          {recentOrders.length === 0 ? (
-            <div className="py-12 text-center text-[10px] tracking-widest text-white/30 uppercase font-mono">
-              No orders registered
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-[10px] font-mono border-collapse">
-                <thead>
-                  <tr className="text-white/40 border-b border-white/5 uppercase text-left">
-                    <th className="pb-3 font-semibold">Order</th>
-                    <th className="pb-3 font-semibold">Customer</th>
-                    <th className="pb-3 font-semibold">Total</th>
-                    <th className="pb-3 font-semibold">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentOrders.map((order) => (
-                    <tr key={order._id} className="border-b border-white/5 last:border-0">
-                      <td className="py-3 text-white font-bold">#{order.orderNumber.split("-")[1] || order.orderNumber}</td>
-                      <td className="py-3 text-white/80">{order.customer?.name || "Anonymous"}</td>
-                      <td className="py-3 text-white">INR {order.grandTotal.toLocaleString()}</td>
-                      <td className="py-3">
-                        <span className={`text-[8.5px] font-bold uppercase tracking-wider ${
-                          order.orderStatus === "Delivered" ? "text-emerald-400" : "text-luxury-gold"
-                        }`}>
-                          {order.orderStatus}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <Table
+            columns={recentOrdersColumns}
+            data={recentOrders}
+            loading={loading}
+            emptyMessage="No orders registered"
+          />
         </div>
 
         {/* Low Stock Alerts */}
-        <div className="glass-card rounded-2xl p-6">
-          <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-between items-center px-2">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
               <div>
@@ -224,42 +256,12 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {lowStock.length === 0 ? (
-            <div className="py-12 text-center text-[10px] tracking-widest text-emerald-400 uppercase font-mono flex items-center justify-center gap-1">
-              <Clock className="w-4 h-4" /> All stock limits verified
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-[10px] font-mono border-collapse">
-                <thead>
-                  <tr className="text-white/40 border-b border-white/5 uppercase text-left">
-                    <th className="pb-3 font-semibold">SKU</th>
-                    <th className="pb-3 font-semibold">Product Name</th>
-                    <th className="pb-3 font-semibold">Stock</th>
-                    <th className="pb-3 font-semibold">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lowStock.map((prod) => (
-                    <tr key={prod._id} className="border-b border-white/5 last:border-0">
-                      <td className="py-3 text-red-400 font-bold">{prod.sku}</td>
-                      <td className="py-3 text-white/80 truncate max-w-xs">{prod.name}</td>
-                      <td className="py-3 font-bold text-red-400 flex items-center gap-1.5">
-                        <AlertTriangle className="w-3.5 h-3.5" /> {prod.stock} units
-                      </td>
-                      <td className="py-3">
-                        <span className={`text-[8.5px] font-bold uppercase tracking-wider ${
-                          prod.status === "Published" ? "text-emerald-400" : "text-white/40"
-                        }`}>
-                          {prod.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <Table
+            columns={lowStockColumns}
+            data={lowStock}
+            loading={loading}
+            emptyMessage="All stock limits verified"
+          />
         </div>
 
       </div>

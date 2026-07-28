@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Search, Eye, Loader2, AlertTriangle, Truck, X, Download } from "lucide-react";
 import { getRequest, putRequest } from "../services/api";
+import Table from "../components/ui/Table";
 
 export default function Orders() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -135,6 +136,90 @@ export default function Orders() {
     );
   });
 
+  const columns = [
+    {
+      header: "Order ID",
+      className: "font-mono font-bold text-white",
+      render: (order: any) => <span>#{order.orderNumber}</span>
+    },
+    {
+      header: "Customer",
+      render: (order: any) => (
+        <div className="text-left font-sans">
+          <span className="text-[#0F4C3A] font-medium text-xs">{order.customer?.name || "N/A"}</span><br />
+          <span className="text-white/40 text-[9px] font-mono leading-none">{order.customer?.email || "N/A"}</span>
+        </div>
+      )
+    },
+    {
+      header: "Value",
+      className: "font-mono text-white",
+      render: (order: any) => <span>INR {order.grandTotal.toLocaleString()}</span>
+    },
+    {
+      header: "Payment",
+      render: (order: any) => (
+        <span className={`text-[8.5px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full border ${
+          order.paymentStatus === "Paid"
+            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+            : order.paymentStatus === "Failed"
+            ? "bg-red-500/10 border-red-500/20 text-red-400"
+            : "bg-white/5 border-white/10 text-white/40"
+        }`}>
+          {order.paymentStatus}
+        </span>
+      )
+    },
+    {
+      header: "Order Status",
+      render: (order: any) => (
+        <span className={`text-[8.5px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full border ${
+          order.orderStatus === "Delivered"
+            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+            : order.orderStatus === "Cancelled"
+            ? "bg-red-500/10 border-red-500/20 text-red-400"
+            : "bg-luxury-gold/10 border-luxury-gold/20 text-luxury-gold"
+        }`}>
+          {order.orderStatus}
+        </span>
+      )
+    },
+    {
+      header: "Tracking",
+      render: (order: any) => order.trackingUrl ? (
+        <a
+          href={order.trackingUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-luxury-gold hover:underline text-[9.5px] uppercase tracking-wider font-bold block"
+          onClick={(e) => e.stopPropagation()}
+        >
+          Track URL ↗
+        </a>
+      ) : order.trackingNumber ? (
+        <div>
+          <span className="text-[#0F4C3A] font-semibold text-[10px]">{order.courierName}</span><br />
+          <span className="text-white/35 text-[8.5px]">{order.trackingNumber}</span>
+        </div>
+      ) : (
+        <span className="text-white/30 italic">No shipment loaded</span>
+      )
+    },
+    {
+      header: "Action",
+      className: "text-right",
+      render: (order: any) => (
+        <button
+          onClick={() => handleOpenOrder(order)}
+          className="p-2 rounded-lg hover:bg-white/5 text-white/60 hover:text-white transition-colors"
+          title="View Details"
+        >
+          <Eye className="w-4.5 h-4.5" />
+        </button>
+      )
+    }
+  ];
+
   return (
     <div className="space-y-8 text-left">
       
@@ -188,98 +273,12 @@ export default function Orders() {
       </div>
 
       {/* Orders table */}
-      <div className="glass-card rounded-2xl overflow-hidden">
-        {loading ? (
-          <div className="py-20 flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-luxury-gold" />
-            <span className="text-[10px] tracking-widest text-white/40 uppercase">Loading orders...</span>
-          </div>
-        ) : filteredOrders.length === 0 ? (
-          <div className="py-20 text-center">
-            <AlertTriangle className="w-8 h-8 text-white/20 mx-auto mb-4" />
-            <p className="text-[10.5px] uppercase tracking-widest text-white/40">No orders registered matching filters.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs border-collapse">
-              <thead>
-                <tr className="bg-[#0f0f0f] border-b border-white/5 text-white/40 uppercase text-[9px] tracking-wider text-left">
-                  <th className="p-4 font-semibold">Order ID</th>
-                  <th className="p-4 font-semibold">Customer</th>
-                  <th className="p-4 font-semibold">Value</th>
-                  <th className="p-4 font-semibold">Payment</th>
-                  <th className="p-4 font-semibold">Order Status</th>
-                  <th className="p-4 font-semibold">Tracking</th>
-                  <th className="p-4 font-semibold text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredOrders.map((order) => (
-                  <tr key={order._id} className="border-b border-white/5 hover:bg-white/2 transition-colors font-mono">
-                    <td className="p-4 font-bold text-white">#{order.orderNumber}</td>
-                    <td className="p-4 text-left font-sans">
-                      <span className="text-white font-medium text-xs">{order.customer?.name || "N/A"}</span><br />
-                      <span className="text-white/40 text-[9px] font-mono leading-none">{order.customer?.email || "N/A"}</span>
-                    </td>
-                    <td className="p-4 text-white">INR {order.grandTotal.toLocaleString()}</td>
-                    <td className="p-4">
-                      <span className={`text-[8.5px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full border ${
-                        order.paymentStatus === "Paid"
-                          ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                          : order.paymentStatus === "Failed"
-                          ? "bg-red-500/10 border-red-500/20 text-red-400"
-                          : "bg-white/5 border-white/10 text-white/40"
-                      }`}>
-                        {order.paymentStatus}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <span className={`text-[8.5px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full border ${
-                        order.orderStatus === "Delivered"
-                          ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                          : order.orderStatus === "Cancelled"
-                          ? "bg-red-500/10 border-red-500/20 text-red-400"
-                          : "bg-luxury-gold/10 border-luxury-gold/20 text-luxury-gold"
-                      }`}>
-                        {order.orderStatus}
-                      </span>
-                    </td>
-                    <td className="p-4 text-left font-sans">
-                      {order.trackingUrl ? (
-                        <a
-                          href={order.trackingUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-luxury-gold hover:underline text-[9.5px] uppercase tracking-wider font-bold block"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          Track URL ↗
-                        </a>
-                      ) : order.trackingNumber ? (
-                        <div>
-                          <span className="text-white font-semibold text-[10px]">{order.courierName}</span><br />
-                          <span className="text-white/35 text-[8.5px]">{order.trackingNumber}</span>
-                        </div>
-                      ) : (
-                        <span className="text-white/30 italic">No shipment loaded</span>
-                      )}
-                    </td>
-                    <td className="p-4 text-right font-sans">
-                      <button
-                        onClick={() => handleOpenOrder(order)}
-                        className="p-2 rounded-lg hover:bg-white/5 text-white/60 hover:text-white transition-colors"
-                        title="View Details"
-                      >
-                        <Eye className="w-4.5 h-4.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <Table
+        columns={columns}
+        data={filteredOrders}
+        loading={loading}
+        emptyMessage="No orders registered matching filters."
+      />
 
       {/* Order Details Accordion Drawer Modal */}
       {showModal && selectedOrder && (
@@ -300,7 +299,7 @@ export default function Orders() {
                 <span className="text-[10px] text-white/40 block">ORDER PLACED: {new Date(selectedOrder.createdAt).toLocaleDateString()}</span>
               </div>
               <div className="text-right sm:text-left">
-                <span className="text-white font-semibold block">TOTAL VALUE: INR {selectedOrder.grandTotal.toLocaleString()}</span>
+                <span className="text-[#0F4C3A] font-semibold block">TOTAL VALUE: INR {selectedOrder.grandTotal.toLocaleString()}</span>
                 <span className="text-emerald-400 text-[10px] uppercase block font-bold">PAYMENT: {selectedOrder.paymentStatus}</span>
               </div>
             </div>
@@ -320,7 +319,13 @@ export default function Orders() {
                           <span className="text-luxury-gold font-bold ml-1">
                             (Size: {item.size})
                           </span>
-                        )}{" "}
+                        )}
+                        {item.variant && (
+                          <span className="text-luxury-gold font-bold ml-1">
+                            (Option: {item.variant})
+                          </span>
+                        )}
+                        {" "}
                         <span className="text-white/45 font-mono text-[9px]">x{item.quantity}</span>
                       </span>
                       <span>INR {(item.price * item.quantity).toLocaleString()}</span>
@@ -333,14 +338,14 @@ export default function Orders() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono text-[9px] uppercase tracking-wider text-white/50">
                 <div>
                   <span className="text-luxury-gold font-bold block mb-1">Shipping Mapped</span>
-                  <span className="text-white font-semibold font-sans">{selectedOrder.shippingAddress.name}</span><br />
+                  <span className="text-[#0F4C3A] font-semibold font-sans">{selectedOrder.shippingAddress.name}</span><br />
                   <span>{selectedOrder.shippingAddress.addressLine1}</span><br />
                   <span>{selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state}</span><br />
                   <span>Phone: {selectedOrder.shippingAddress.phone}</span>
                 </div>
                 <div>
                   <span className="text-luxury-gold font-bold block mb-1">Billing Mapped</span>
-                  <span className="text-white font-semibold font-sans">{selectedOrder.billingAddress.name}</span><br />
+                  <span className="text-[#0F4C3A] font-semibold font-sans">{selectedOrder.billingAddress.name}</span><br />
                   <span>{selectedOrder.billingAddress.addressLine1}</span><br />
                   <span>{selectedOrder.billingAddress.city}, {selectedOrder.billingAddress.state}</span>
                 </div>

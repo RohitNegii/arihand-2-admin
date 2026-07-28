@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, Loader2, AlertTriangle, X } from "lucide-react";
 import { getRequest, postRequest, putRequest, deleteRequest } from "../services/api";
 import { toast } from "sonner";
+import Table from "../components/ui/Table";
+import DeleteConfirmModal from "../components/ui/DeleteConfirmModal";
 
 interface FAQItem {
   _id: string;
@@ -24,6 +26,9 @@ export default function FAQs() {
   const [answer, setAnswer] = useState("");
   const [order, setOrder] = useState<number>(0);
   const [formLoading, setFormLoading] = useState(false);
+
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     fetchFaqs();
@@ -92,18 +97,62 @@ export default function FAQs() {
     }
   };
 
-  const handleDeleteFaq = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this FAQ?")) return;
+  const confirmDeleteFaq = async () => {
+    if (!deleteConfirmId) return;
+    setDeleteLoading(true);
     try {
-      const res = await deleteRequest<{ success: boolean }>(`/faqs/${id}`);
+      const res = await deleteRequest<{ success: boolean }>(`/faqs/${deleteConfirmId}`);
       if (res.success) {
         toast.success("FAQ deleted successfully.");
+        setDeleteConfirmId(null);
         fetchFaqs();
       }
     } catch (err: any) {
       toast.error("Failed to delete FAQ.");
+    } finally {
+      setDeleteLoading(false);
     }
   };
+
+  const columns = [
+    {
+      header: "Sort Order",
+      className: "w-16 text-center font-mono text-white/60",
+      render: (item: FAQItem) => <span>{item.order}</span>
+    },
+    {
+      header: "Question",
+      className: "font-serif text-sm font-light text-left max-w-xs leading-relaxed",
+      render: (item: FAQItem) => <span>{item.question}</span>
+    },
+    {
+      header: "Answer Explanation",
+      className: "text-left font-sans leading-relaxed text-white/70 max-w-md",
+      render: (item: FAQItem) => <span>{item.answer}</span>
+    },
+    {
+      header: "Actions",
+      className: "text-right w-24",
+      render: (item: FAQItem) => (
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => openEditModal(item)}
+            className="p-2 rounded-lg hover:bg-white/5 text-white/60 hover:text-white transition-colors cursor-pointer"
+            title="Edit FAQ"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setDeleteConfirmId(item._id)}
+            className="p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-red-500 transition-colors cursor-pointer"
+            title="Delete FAQ"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      )
+    }
+  ];
 
   return (
     <div className="space-y-8 text-left">
@@ -125,67 +174,12 @@ export default function FAQs() {
       </div>
 
       {/* FAQs List Table */}
-      <div className="glass-card rounded-2xl overflow-hidden">
-        {loading ? (
-          <div className="py-20 flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-luxury-gold" />
-            <span className="text-[10px] tracking-widest text-white/40 uppercase font-mono">
-              Loading FAQs...
-            </span>
-          </div>
-        ) : faqs.length === 0 ? (
-          <div className="py-20 text-center">
-            <AlertTriangle className="w-8 h-8 text-white/20 mx-auto mb-4" />
-            <p className="text-[10.5px] uppercase tracking-widest text-white/40">
-              No FAQs defined.
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs border-collapse">
-              <thead>
-                <tr className="bg-[#0f0f0f] border-b border-white/5 text-white/40 uppercase text-[9px] tracking-wider text-left">
-                  <th className="p-4 font-semibold w-16 text-center">Sort Order</th>
-                  <th className="p-4 font-semibold">Question</th>
-                  <th className="p-4 font-semibold">Answer Explanation</th>
-                  <th className="p-4 font-semibold text-right w-24">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {faqs.map((item) => (
-                  <tr key={item._id} className="border-b border-white/5 hover:bg-white/2 transition-colors">
-                    <td className="p-4 text-center font-mono text-white/60">{item.order}</td>
-                    <td className="p-4 text-white font-serif text-sm font-light text-left max-w-xs leading-relaxed">
-                      {item.question}
-                    </td>
-                    <td className="p-4 text-white/70 max-w-md text-left font-sans leading-relaxed">
-                      {item.answer}
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => openEditModal(item)}
-                          className="p-2 rounded-lg hover:bg-white/5 text-white/60 hover:text-white transition-colors cursor-pointer"
-                          title="Edit FAQ"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteFaq(item._id)}
-                          className="p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-red-500 transition-colors cursor-pointer"
-                          title="Delete FAQ"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <Table
+        columns={columns}
+        data={faqs}
+        loading={loading}
+        emptyMessage="No FAQs defined."
+      />
 
       {/* CRUD FAQ Modal */}
       {showModal && (
@@ -267,6 +261,15 @@ export default function FAQs() {
           </div>
         </div>
       )}
+      {/* Delete Confirmation Popup */}
+      <DeleteConfirmModal
+        isOpen={!!deleteConfirmId}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={confirmDeleteFaq}
+        loading={deleteLoading}
+        title="Retire FAQ Item"
+        message="Are you sure you want to permanently delete this Frequently Asked Question (FAQ) block from user reference tables?"
+      />
     </div>
   );
 }

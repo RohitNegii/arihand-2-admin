@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, Loader2, AlertTriangle, X } from "lucide-react";
 import { getRequest, postRequest, putRequest, deleteRequest } from "../services/api";
+import Table from "../components/ui/Table";
+import DeleteConfirmModal from "../components/ui/DeleteConfirmModal";
 
 export default function Categories() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -20,6 +22,9 @@ export default function Categories() {
 
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
+
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const handleAddSizeTag = () => {
     const cleanTag = newSizeTag.trim();
@@ -104,15 +109,68 @@ export default function Categories() {
     }
   };
 
-  const handleDeleteCategory = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this category? Products mapped to this will lose their reference.")) return;
+  const confirmDeleteCategory = async () => {
+    if (!deleteConfirmId) return;
+    setDeleteLoading(true);
     try {
-      await deleteRequest(`/categories/${id}`);
+      await deleteRequest(`/categories/${deleteConfirmId}`);
+      setDeleteConfirmId(null);
       fetchCategories();
     } catch (err) {
       console.error("Failed to delete category", err);
+    } finally {
+      setDeleteLoading(false);
     }
   };
+
+  const columns = [
+    {
+      header: "Name",
+      render: (cat: any) => (
+        <span className="font-serif text-sm font-light text-left text-[#0F4C3A] block">
+          {cat.name}
+        </span>
+      )
+    },
+    {
+      header: "Slug Identifier",
+      className: "font-mono text-left text-white/60",
+      render: (cat: any) => <span>{cat.slug}</span>
+    },
+    {
+      header: "Description",
+      render: (cat: any) => (
+        <div className="text-left font-sans text-xs text-white/70 max-w-sm">
+          <div className="truncate">{cat.description || "—"}</div>
+          {cat.sizes && cat.sizes.length > 0 && (
+            <div className="text-luxury-gold text-[8.5px] uppercase font-bold tracking-wider mt-1">
+              Sizes: {cat.sizes.join(", ")} {cat.allowCustomSize && "(+ Custom)"}
+            </div>
+          )}
+        </div>
+      )
+    },
+    {
+      header: "Actions",
+      className: "text-right",
+      render: (cat: any) => (
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => openEditModal(cat)}
+            className="p-2 rounded-lg hover:bg-white/5 text-white/60 hover:text-white transition-colors"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setDeleteConfirmId(cat._id)}
+            className="p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-red-500 transition-colors cursor-pointer"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      )
+    }
+  ];
 
   return (
     <div className="space-y-8 text-left">
@@ -133,64 +191,12 @@ export default function Categories() {
       </div>
 
       {/* List Table */}
-      <div className="glass-card rounded-2xl overflow-hidden">
-        {loading ? (
-          <div className="py-20 flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-luxury-gold" />
-            <span className="text-[10px] tracking-widest text-white/40 uppercase">Loading folders...</span>
-          </div>
-        ) : categories.length === 0 ? (
-          <div className="py-20 text-center">
-            <AlertTriangle className="w-8 h-8 text-white/20 mx-auto mb-4" />
-            <p className="text-[10.5px] uppercase tracking-widest text-white/40">No categories registered.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs border-collapse">
-              <thead>
-                <tr className="bg-[#0f0f0f] border-b border-white/5 text-white/40 uppercase text-[9px] tracking-wider text-left">
-                  <th className="p-4 font-semibold">Name</th>
-                  <th className="p-4 font-semibold">Slug Identifier</th>
-                  <th className="p-4 font-semibold">Description</th>
-                  <th className="p-4 font-semibold text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {categories.map((cat) => (
-                  <tr key={cat._id} className="border-b border-white/5 hover:bg-white/2 transition-colors">
-                    <td className="p-4 text-white font-serif text-sm font-light text-left">{cat.name}</td>
-                    <td className="p-4 font-mono text-left text-white/60">{cat.slug}</td>
-                    <td className="p-4 text-white/70 max-w-sm text-left font-sans text-xs">
-                      <div className="truncate">{cat.description || "—"}</div>
-                      {cat.sizes && cat.sizes.length > 0 && (
-                        <div className="text-luxury-gold text-[8.5px] uppercase font-bold tracking-wider mt-1">
-                          Sizes: {cat.sizes.join(", ")} {cat.allowCustomSize && "(+ Custom)"}
-                        </div>
-                      )}
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => openEditModal(cat)}
-                          className="p-2 rounded-lg hover:bg-white/5 text-white/60 hover:text-white transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteCategory(cat._id)}
-                          className="p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-red-500 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <Table
+        columns={columns}
+        data={categories}
+        loading={loading}
+        emptyMessage="No categories registered."
+      />
 
       {/* CRUD Category Modal */}
       {showModal && (
@@ -322,7 +328,15 @@ export default function Categories() {
           </div>
         </div>
       )}
-
+      {/* Delete Confirmation Popup */}
+      <DeleteConfirmModal
+        isOpen={!!deleteConfirmId}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={confirmDeleteCategory}
+        loading={deleteLoading}
+        title="Retire Category Folder"
+        message="Are you sure you want to delete this category? Products mapped to this will lose their reference."
+      />
     </div>
   );
 }
