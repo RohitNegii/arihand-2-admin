@@ -57,7 +57,7 @@ export const getImageUrl = (path: string) => {
   if (path.startsWith("http://") || path.startsWith("https://")) {
     return path;
   }
-  const baseUrl = API_URL.replace("/api", "");
+  const baseUrl = API_URL.replace(/\/api$/, "");
   return `${baseUrl}${path.startsWith("/") ? "" : "/"}${path}`;
 };
 
