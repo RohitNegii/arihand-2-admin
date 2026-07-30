@@ -40,8 +40,8 @@ export default function Sidebar() {
       {/* Brand Header */}
       <div className="h-16 flex items-center px-6 border-b border-luxury-gold/15 gap-2">
         <Sparkles className="w-5 h-5 text-luxury-gold animate-pulse" />
-        <span className="font-serif tracking-[0.2em] font-light text-md uppercase text-white">
-          AURUM ADMIN
+        <span className="font-serif tracking-[0.1em] font-light text-sm uppercase text-white">
+          GEETEJ VIRAASAT
         </span>
       </div>
 

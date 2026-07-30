@@ -83,7 +83,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg bg-white/70 border border-luxury-gold/20 text-[#0F4C3A] text-xs tracking-wider focus:border-luxury-gold focus:outline-hidden transition-all duration-300 font-mono"
-                placeholder="admin@aurum.art"
+                placeholder="admin@geetejviraasat.com"
                 required
               />
             </div>
