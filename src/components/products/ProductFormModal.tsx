@@ -3,6 +3,7 @@ import { Upload, Loader2 } from "lucide-react";
 import Modal from "../ui/Modal";
 import { postRequest, putRequest, getImageUrl } from "../../services/api";
 import { getSizeConfigByCategoryName, DEFAULT_SIZE_CONFIG } from "../../config/sizeConfig";
+import { compressImage } from "../../utils/imageCompressor";
 
 const isVideoUrl = (url: string) => {
   if (!url) return false;
@@ -84,6 +85,7 @@ export default function ProductFormModal({
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
   const [imageUploading, setImageUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
 
   // Sync props data to form states
   useEffect(() => {
@@ -160,10 +162,25 @@ export default function ProductFormModal({
       return;
     }
 
-    const formData = new FormData();
-    files.forEach((file) => formData.append("images", file));
-
     try {
+      setUploadStatus("Compressing...");
+      
+      // Compress selected image files in parallel (skips videos and non-images)
+      const processedFiles = await Promise.all(
+        files.map(async (file) => {
+          try {
+            return await compressImage(file, { maxWidth: 1600, maxHeight: 1600, quality: 0.8 });
+          } catch (compressErr) {
+            console.error("Client compression error for:", file.name, compressErr);
+            return file; // fallback to original file if compression fails
+          }
+        })
+      );
+
+      setUploadStatus("Uploading...");
+      const formData = new FormData();
+      processedFiles.forEach((file) => formData.append("images", file));
+
       const res = await postRequest("/products/upload-images", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
@@ -181,6 +198,7 @@ export default function ProductFormModal({
       setFormError(err.response?.data?.message || "Failed to upload images to local server storage.");
     } finally {
       setImageUploading(false);
+      setUploadStatus("");
     }
   };
 
@@ -889,7 +907,9 @@ export default function ProductFormModal({
                   {imageUploading && (
                     <div className="relative aspect-square rounded-lg border border-luxury-gold/30 border-dashed bg-luxury-gold/5 flex flex-col items-center justify-center p-2">
                       <Loader2 className="w-5 h-5 animate-spin text-luxury-gold mb-1" />
-                      <span className="text-[8px] uppercase tracking-wider text-luxury-gold font-bold">Uploading...</span>
+                      <span className="text-[8px] uppercase tracking-wider text-luxury-gold font-bold text-center">
+                        {uploadStatus || "Uploading..."}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -919,7 +939,7 @@ export default function ProductFormModal({
               </>
             ) : imageUploading ? (
               <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading Images...
+                <Loader2 className="w-3.5 h-3.5 animate-spin" /> {uploadStatus || "Uploading..."}
               </>
             ) : (
               "Save Masterpiece"
