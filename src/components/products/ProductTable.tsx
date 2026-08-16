@@ -23,7 +23,7 @@ export default function ProductTable({
   onEdit,
   onDelete
 }: ProductTableProps) {
-  
+
   const columns = [
     {
       header: "SKU / Item",
@@ -68,7 +68,7 @@ export default function ProductTable({
           priceStr = `INR ${prod.price.toLocaleString()}`;
         }
         return (
-          <div className="text-left font-semibold text-[#0F4C3A]">
+          <div className="text-left font-semibold text-[#351E28]">
             {priceStr}
           </div>
         );
@@ -93,7 +93,7 @@ export default function ProductTable({
         }
         return (
           <div className="text-left">
-            <span className="text-[#0F4C3A] font-medium">{stockVal} items</span><br />
+            <span className="text-[#351E28] font-medium">{stockVal} items</span><br />
             <span className={`text-[8px] uppercase tracking-wider font-bold ${colorClass}`}>{stockLabel}</span>
           </div>
         );

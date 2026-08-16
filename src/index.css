@@ -6,15 +6,30 @@
   --font-secondary: "Cormorant Garamond", Georgia, serif;
 
   /* Colors */
-  --color-primary: #0F4C3A;
-  --color-primary-rgb: 15, 76, 58;
+  --color-primary: #351E28;
+  --color-primary-rgb: 53, 30, 40;
   --color-secondary: #C8A96A;
   --color-secondary-rgb: 200, 169, 106;
-  --color-background: #F8F4EA;
-  --color-background-rgb: 248, 244, 234;
+  --color-background: #F7F2EE;
+  --color-background-rgb: 247, 242, 238;
+  --color-accent: #7A5D68;
+  --color-accent-rgb: 122, 93, 104;
+  --color-shell: #E7DCD2;
+  --color-shell-rgb: 231, 220, 210;
 }
 
 @theme {
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-background: var(--color-background);
+  --color-accent: var(--color-accent);
+  --color-shell: var(--color-shell);
+
+  --color-verdant-emerald: var(--color-primary);
+  --color-verdant-cream: var(--color-background);
+  --color-verdant-gold: var(--color-secondary);
+  --color-verdant-accent: var(--color-accent);
+
   --color-luxury-gold: var(--color-secondary);
   --color-luxury-bg: var(--color-background);
   --color-luxury-card: rgba(255, 255, 255, 0.65);
@@ -60,7 +75,9 @@ body {
 }
 
 /* Global Theme Overrides for Green & Cream admin inputs */
-input, select, textarea {
+input,
+select,
+textarea {
   color: var(--color-primary) !important;
   background-color: rgba(255, 255, 255, 0.8) !important;
   border-color: rgba(var(--color-primary-rgb), 0.15) !important;
@@ -71,7 +88,9 @@ input::placeholder {
 }
 
 /* Form fields nested inside dialogs/cards */
-.glass-card select, .glass-card input, .glass-card textarea {
+.glass-card select,
+.glass-card input,
+.glass-card textarea {
   color: var(--color-primary) !important;
   background-color: rgba(255, 255, 255, 0.95) !important;
   border-color: rgba(var(--color-primary-rgb), 0.2) !important;
@@ -86,7 +105,12 @@ label {
   color: rgba(var(--color-primary-rgb), 0.7) !important;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: var(--color-primary) !important;
 }
 
@@ -100,16 +124,22 @@ table td {
 }
 
 .font-mono {
-  color: var(--color-primary) !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 /* Accent borders */
-.border-white\/5, .border-white\/8, .border-white\/10 {
+.border-white\/5,
+.border-white\/8,
+.border-white\/10 {
   border-color: rgba(var(--color-primary-rgb), 0.08) !important;
 }
 
 /* Text transparency helpers */
-.text-white\/40, .text-white\/50, .text-white\/60, .text-white\/70, .text-white\/35 {
+.text-white\/40,
+.text-white\/50,
+.text-white\/60,
+.text-white\/70,
+.text-white\/35 {
   color: rgba(var(--color-primary-rgb), 0.65) !important;
 }
 
@@ -122,13 +152,16 @@ table td {
   width: 4px;
   height: 4px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(var(--color-secondary-rgb), 0.4);
   border-radius: 2px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--color-secondary-rgb), 0.7);
 }

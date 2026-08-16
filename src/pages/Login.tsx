@@ -51,7 +51,7 @@ export default function Login() {
     <div className="min-h-screen bg-luxury-bg flex items-center justify-center px-6 relative select-none">
       {/* Decorative blurs */}
       <div className="absolute top-[20%] left-[10%] w-[35vw] h-[35vw] bg-radial from-luxury-gold/10 to-transparent blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[20%] right-[10%] w-[35vw] h-[35vw] bg-radial from-[#0F4C3A]/5 to-transparent blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[20%] right-[10%] w-[35vw] h-[35vw] bg-radial from-[#351E28]/5 to-transparent blur-[120px] pointer-events-none" />
 
       <div className="w-full max-w-md relative z-10">
         <div className="glass-card rounded-3xl p-8 md:p-10 text-center">
@@ -63,7 +63,7 @@ export default function Login() {
           <span className="text-[9px] tracking-[0.3em] uppercase text-luxury-gold mb-3 block font-bold">
             internal administration
           </span>
-          <h2 className="font-serif text-3xl font-light tracking-wide text-[#0F4C3A] mb-8">
+          <h2 className="font-serif text-3xl font-light tracking-wide text-[#351E28] mb-8">
             Atelier Gateway
           </h2>
 
@@ -75,28 +75,28 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6 text-left">
             <div>
-              <label className="block text-[8px] tracking-[0.2em] uppercase text-[#0F4C3A]/50 mb-2 font-semibold">
+              <label className="block text-[8px] tracking-[0.2em] uppercase text-[#351E28]/50 mb-2 font-semibold">
                 admin email
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg bg-white/70 border border-luxury-gold/20 text-[#0F4C3A] text-xs tracking-wider focus:border-luxury-gold focus:outline-hidden transition-all duration-300 font-mono"
+                className="w-full px-4 py-3 rounded-lg bg-white/70 border border-luxury-gold/20 text-[#351E28] text-xs tracking-wider focus:border-luxury-gold focus:outline-hidden transition-all duration-300 font-mono"
                 placeholder="admin@geetejviraasat.com"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-[8px] tracking-[0.2em] uppercase text-[#0F4C3A]/50 mb-2 font-semibold">
+              <label className="block text-[8px] tracking-[0.2em] uppercase text-[#351E28]/50 mb-2 font-semibold">
                 password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg bg-white/70 border border-luxury-gold/20 text-[#0F4C3A] text-xs tracking-wider focus:border-luxury-gold focus:outline-hidden transition-all duration-300 font-mono"
+                className="w-full px-4 py-3 rounded-lg bg-white/70 border border-luxury-gold/20 text-[#351E28] text-xs tracking-wider focus:border-luxury-gold focus:outline-hidden transition-all duration-300 font-mono"
                 placeholder="••••••••"
                 required
               />
@@ -105,10 +105,10 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-4 bg-luxury-gold text-[#0F4C3A] py-3 rounded-full text-[10px] tracking-[0.25em] uppercase font-bold flex items-center justify-center gap-2 shadow-lg transition-transform hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
+              className="w-full mt-4 bg-luxury-gold text-[#351E28] py-3 rounded-full text-[10px] tracking-[0.25em] uppercase font-bold flex items-center justify-center gap-2 shadow-lg transition-transform hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
             >
               {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin text-[#0F4C3A]" />
+                <Loader2 className="w-4 h-4 animate-spin text-[#351E28]" />
               ) : (
                 <>
                   Verify Gateway <ArrowRight className="w-3.5 h-3.5" />

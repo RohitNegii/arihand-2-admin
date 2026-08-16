@@ -9,7 +9,7 @@ export default function Products() {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Form State
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
@@ -91,7 +91,7 @@ export default function Products() {
 
   return (
     <div className="space-y-8 text-left">
-      
+
       {/* Page header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -135,11 +135,11 @@ export default function Products() {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full min-w-[140px] px-3 py-2 rounded-xl bg-[#121212] border border-white/8 text-xs text-white focus:border-luxury-gold focus:outline-hidden"
+              className="w-full min-w-[140px] px-3 py-2 rounded-xl bg-white/8 border border-white/8 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
             >
-              <option value="" className="bg-[#151515]">All Categories</option>
+              <option value="">All Categories</option>
               {categories.map((cat) => (
-                <option key={cat._id} value={cat._id} className="bg-[#151515]">{cat.name}</option>
+                <option key={cat._id} value={cat._id}>{cat.name}</option>
               ))}
             </select>
           </div>
@@ -149,11 +149,11 @@ export default function Products() {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full min-w-[120px] px-3 py-2 rounded-xl bg-[#121212] border border-white/8 text-xs text-white focus:border-luxury-gold focus:outline-hidden"
+              className="w-full min-w-[120px] px-3 py-2 rounded-xl bg-white/8 border border-white/8 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
             >
-              <option value="" className="bg-[#151515]">All Statuses</option>
-              <option value="Published" className="bg-[#151515]">Published</option>
-              <option value="Draft" className="bg-[#151515]">Draft</option>
+              <option value="">All Statuses</option>
+              <option value="Published">Published</option>
+              <option value="Draft">Draft</option>
             </select>
           </div>
 
@@ -162,11 +162,11 @@ export default function Products() {
             <select
               value={selectedStockStatus}
               onChange={(e) => setSelectedStockStatus(e.target.value)}
-              className="w-full min-w-[120px] px-3 py-2 rounded-xl bg-[#121212] border border-white/8 text-xs text-white focus:border-luxury-gold focus:outline-hidden"
+              className="w-full min-w-[120px] px-3 py-2 rounded-xl bg-white/8 border border-white/8 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
             >
-              <option value="" className="bg-[#151515]">Stock Level</option>
-              <option value="in-stock" className="bg-[#151515]">In Stock (&gt;0)</option>
-              <option value="out-of-stock" className="bg-[#151515]">Out of Stock (0)</option>
+              <option value="">Stock Level</option>
+              <option value="in-stock">In Stock (&gt;0)</option>
+              <option value="out-of-stock">Out of Stock (0)</option>
             </select>
           </div>
 

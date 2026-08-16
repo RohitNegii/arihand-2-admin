@@ -37,7 +37,7 @@ export default function DeleteConfirmModal({
           <AlertTriangle className="w-6 h-6" />
         </div>
 
-        <p className="text-[#0F4C3A]/70 text-xs mb-6 leading-relaxed">
+        <p className="text-[#351E28]/70 text-xs mb-6 leading-relaxed">
           {message}
         </p>
 
@@ -46,7 +46,7 @@ export default function DeleteConfirmModal({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="px-5 py-2 rounded-full border border-[#0F4C3A]/15 text-[#0F4C3A] hover:bg-[#0F4C3A]/5 text-[9.5px] tracking-wider uppercase font-semibold transition-colors cursor-pointer disabled:opacity-50"
+            className="px-5 py-2 rounded-full border border-[#351E28]/15 text-[#351E28] hover:bg-[#351E28]/5 text-[9.5px] tracking-wider uppercase font-semibold transition-colors cursor-pointer disabled:opacity-50"
           >
             {cancelText}
           </button>

@@ -72,10 +72,18 @@ export default function ProductFormModal({
   const handleAddSizeTag = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const cleanTag = newSizeTag.trim();
-    if (cleanTag && !sizes.includes(cleanTag)) {
-      setSizes([...sizes, cleanTag]);
-      setNewSizeTag("");
+    if (!cleanTag) return;
+    if (sizes.map(s => s.toLowerCase()).includes(cleanTag.toLowerCase())) {
+      setFormError(`Size tag "${cleanTag}" is already added.`);
+      return;
     }
+    if (cleanTag.length > 30) {
+      setFormError("Size tag must be 30 characters or less.");
+      return;
+    }
+    setFormError("");
+    setSizes([...sizes, cleanTag]);
+    setNewSizeTag("");
   };
 
   const handleRemoveSizeTag = (tag: string) => {
@@ -230,32 +238,50 @@ export default function ProductFormModal({
 
     // Check mandatory constraints
     const isPriceRequired = !hasVariants;
-    if (
-      !name ||
-      !sku ||
-      (isPriceRequired && (price === undefined || price === null)) ||
-      !categoryId ||
-      !material ||
-      !purity ||
-      weight === undefined
-    ) {
-      setFormError("Please fill in all required fields (Name, SKU, Category, Price, Material, Purity, and Weight).");
+    const trimmedName = name.trim();
+    const trimmedSku = sku.trim();
+    const trimmedShortDesc = shortDescription.trim();
+    const trimmedDesc = description.trim();
+
+    if (!trimmedName) {
+      setFormError("Product Name is required.");
       return;
     }
 
-    if (isPriceRequired && price <= 0) {
-      setFormError("Base price must be greater than 0.");
+    if (!trimmedSku) {
+      setFormError("SKU Code is required.");
       return;
     }
 
-    if (weight <= 0) {
-      setFormError("Product weight must be greater than 0g.");
+    if (!categoryId) {
+      setFormError("Category is required.");
       return;
     }
 
-    if (!hasVariants && stock < 0) {
-      setFormError("Stock quantity cannot be negative.");
+    if (!material) {
+      setFormError("Material type is required.");
       return;
+    }
+
+    if (!purity) {
+      setFormError("Purity is required.");
+      return;
+    }
+
+    if (weight === undefined || weight === null || isNaN(weight) || weight <= 0) {
+      setFormError("Product weight is required and must be greater than 0g.");
+      return;
+    }
+
+    if (isPriceRequired) {
+      if (price === undefined || price === null || isNaN(price) || price <= 0) {
+        setFormError("Base price is required and must be greater than 0.");
+        return;
+      }
+      if (stock === undefined || stock === null || isNaN(stock) || stock < 0) {
+        setFormError("Stock quantity is required and cannot be negative.");
+        return;
+      }
     }
 
     if (hasVariants) {
@@ -263,37 +289,67 @@ export default function ProductFormModal({
         setFormError("Please add at least one variant option if variants are enabled.");
         return;
       }
-      for (const v of variants) {
+      for (let i = 0; i < variants.length; i++) {
+        const v = variants[i];
         if (!v.name || !v.name.trim()) {
-          setFormError("All variants must have a name.");
+          setFormError(`Variant #${i + 1} must have a name.`);
           return;
         }
-        if (v.price <= 0) {
+        if (v.price === undefined || v.price === null || isNaN(v.price) || v.price <= 0) {
           setFormError(`Price for variant '${v.name}' must be greater than 0.`);
           return;
         }
-        if (v.stock < 0) {
+        if (v.stock === undefined || v.stock === null || isNaN(v.stock) || v.stock < 0) {
           setFormError(`Stock for variant '${v.name}' cannot be negative.`);
           return;
         }
       }
     }
 
+    if (!trimmedShortDesc) {
+      setFormError("Short Description is required.");
+      return;
+    }
+
+    if (!trimmedDesc) {
+      setFormError("Long Description is required.");
+      return;
+    }
+
+    if (images.length === 0) {
+      setFormError("Please upload at least one gallery image or media file.");
+      return;
+    }
+
+    let finalSizes = [...sizes];
+    const cleanTag = newSizeTag.trim();
+    if (cleanTag) {
+      if (sizes.map(s => s.toLowerCase()).includes(cleanTag.toLowerCase())) {
+        setFormError(`Size tag "${cleanTag}" is already added.`);
+        return;
+      }
+      if (cleanTag.length > 30) {
+        setFormError("Size tag must be 30 characters or less.");
+        return;
+      }
+      finalSizes.push(cleanTag);
+    }
+
     setFormLoading(true);
     setFormError("");
 
     const payload = {
-      name,
-      sku: sku.toUpperCase().trim(),
-      description,
-      shortDescription,
+      name: trimmedName,
+      sku: trimmedSku.toUpperCase(),
+      description: trimmedDesc,
+      shortDescription: trimmedShortDesc,
       categoryId,
-      material,
-      purity,
+      material: material.trim(),
+      purity: purity.trim(),
       weight,
-      dimensions,
+      dimensions: dimensions.trim(),
       gender,
-      occasion,
+      occasion: occasion.trim(),
       price: hasVariants ? undefined : price,
       stock: hasVariants ? 0 : stock,
       status,
@@ -302,10 +358,15 @@ export default function ProductFormModal({
       isBestSeller,
       images,
       thumbnail,
-      sizes,
+      sizes: finalSizes,
       allowCustomSize,
       hasVariants,
-      variants
+      variants: hasVariants ? variants.map(v => ({
+        name: v.name.trim(),
+        price: v.price,
+        stock: v.stock,
+        sku: v.sku ? v.sku.toUpperCase().trim() : undefined
+      })) : []
     };
 
     try {
@@ -347,40 +408,40 @@ export default function ProductFormModal({
           
           {/* Section 1: Core Specifications */}
           <div>
-            <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#0F4C3A]/10 pb-1.5 mb-4 font-bold">
+            <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#351E28]/10 pb-1.5 mb-4 font-bold">
               1. Core Specifications
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Item Name */}
               <div className="md:col-span-2">
-                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Item Name *</label>
+                <label className="block text-[8px] tracking-wider uppercase text-[#351E28]/70 mb-1.5 font-bold">Item Name *</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
                   required
                 />
               </div>
               {/* SKU Code */}
               <div>
-                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">SKU Code *</label>
+                <label className="block text-[8px] tracking-wider uppercase text-[#351E28]/70 mb-1.5 font-bold">SKU Code *</label>
                 <input
                   type="text"
                   value={sku}
                   onChange={(e) => setSku(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden font-mono uppercase"
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden font-mono uppercase"
                   placeholder="SOL-EM-PND"
                   required
                 />
               </div>
               {/* Category */}
               <div>
-                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Category *</label>
+                <label className="block text-[8px] tracking-wider uppercase text-[#351E28]/70 mb-1.5 font-bold">Category *</label>
                 <select
                   value={categoryId}
                   onChange={(e) => handleCategoryChange(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
                   required
                 >
                   {categories.map((cat) => (
@@ -390,11 +451,11 @@ export default function ProductFormModal({
               </div>
               {/* Status */}
               <div>
-                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Publish Status</label>
+                <label className="block text-[8px] tracking-wider uppercase text-[#351E28]/70 mb-1.5 font-bold">Publish Status</label>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
                 >
                   <option value="Draft">Draft</option>
                   <option value="Published">Published</option>
@@ -405,31 +466,35 @@ export default function ProductFormModal({
 
           {/* Section 2: Valuation & Stock */}
           <div>
-            <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#0F4C3A]/10 pb-1.5 mb-4 font-bold">
+            <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#351E28]/10 pb-1.5 mb-4 font-bold">
               2. Valuation & Stock
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Base Price */}
               {!hasVariants && (
                 <div>
-                  <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Base Price (INR) *</label>
+                  <label className="block text-[8px] tracking-wider uppercase text-[#351E28]/70 mb-1.5 font-bold">Base Price (INR) *</label>
                   <input
                     type="number"
+                    min={0}
+                    onKeyDown={(e) => { if (e.key === '-' || e.key === '+') e.preventDefault(); }}
                     value={price}
-                    onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden font-mono"
+                    onChange={(e) => setPrice(Math.max(0, parseFloat(e.target.value) || 0))}
+                    className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden font-mono"
                     required
                   />
                 </div>
               )}
               {/* Stock Qty */}
               <div className={hasVariants ? "md:col-span-2" : ""}>
-                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Stock Qty *</label>
+                <label className="block text-[8px] tracking-wider uppercase text-[#351E28]/70 mb-1.5 font-bold">Stock Qty *</label>
                 <input
                   type="number"
+                  min={0}
+                  onKeyDown={(e) => { if (e.key === '-' || e.key === '+') e.preventDefault(); }}
                   value={stock}
-                  onChange={(e) => setStock(parseInt(e.target.value) || 0)}
-                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden font-mono"
+                  onChange={(e) => setStock(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden font-mono"
                   required={!hasVariants}
                   disabled={hasVariants}
                 />
@@ -437,8 +502,8 @@ export default function ProductFormModal({
             </div>
             
             {/* Product Variants Section */}
-            <div className="mt-6 p-4 rounded-xl border border-[#0F4C3A]/10 bg-[#0F4C3A]/3 space-y-4 text-left">
-              <label className="flex items-center gap-2 select-none cursor-pointer font-bold text-[#0F4C3A] font-mono text-[9px] uppercase tracking-wider">
+            <div className="mt-6 p-4 rounded-xl border border-[#351E28]/10 bg-[#351E28]/3 space-y-4 text-left">
+              <label className="flex items-center gap-2 select-none cursor-pointer font-bold text-[#351E28] font-mono text-[9px] uppercase tracking-wider">
                 <input
                   type="checkbox"
                   checked={hasVariants}
@@ -450,7 +515,7 @@ export default function ProductFormModal({
 
               {hasVariants && (
                 <div className="space-y-3 pt-2">
-                  <div className="flex justify-between items-center border-b border-[#0F4C3A]/10 pb-2">
+                  <div className="flex justify-between items-center border-b border-[#351E28]/10 pb-2">
                     <span className="text-[9px] uppercase tracking-wider font-bold text-luxury-gold">Product Variants List</span>
                     <button
                       type="button"
@@ -460,21 +525,21 @@ export default function ProductFormModal({
                           { name: "Option A", price: price || 0, stock: stock || 0, sku: sku ? `${sku}-A` : "" }
                         ]);
                       }}
-                      className="bg-[#0F4C3A] hover:bg-[#0F4C3A]/90 text-white hover:text-luxury-gold px-3 py-1 rounded-md text-[8.5px] uppercase tracking-wider font-bold transition-all cursor-pointer"
+                      className="bg-[#351E28] hover:bg-[#351E28]/90 text-white hover:text-luxury-gold px-3 py-1 rounded-md text-[8.5px] uppercase tracking-wider font-bold transition-all cursor-pointer"
                     >
                       + Add Variant Row
                     </button>
                   </div>
 
                   {variants.length === 0 ? (
-                    <p className="text-[9px] uppercase tracking-wider text-[#0F4C3A]/40 italic py-2">No variants added yet. Click + Add Variant Row above.</p>
+                    <p className="text-[9px] uppercase tracking-wider text-[#351E28]/40 italic py-2">No variants added yet. Click + Add Variant Row above.</p>
                   ) : (
                     <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                       {variants.map((v, index) => (
-                        <div key={index} className="grid grid-cols-12 gap-2 items-center bg-white/20 p-2.5 rounded-lg border border-[#0F4C3A]/10">
+                        <div key={index} className="grid grid-cols-12 gap-2 items-center bg-white/20 p-2.5 rounded-lg border border-[#351E28]/10">
                           {/* Option Name */}
                           <div className="col-span-3">
-                            <label className="block text-[7px] uppercase text-[#0F4C3A]/60 font-bold mb-1">Option Name *</label>
+                            <label className="block text-[7px] uppercase text-[#351E28]/60 font-bold mb-1">Option Name *</label>
                             <input
                               type="text"
                               value={v.name}
@@ -484,43 +549,47 @@ export default function ProductFormModal({
                                 setVariants(newVars);
                               }}
                               placeholder="e.g. Option A"
-                              className="w-full px-2 py-1 rounded bg-[#faf7f2] border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                              className="w-full px-2 py-1 rounded bg-[#F7F2EE] border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
                               required
                             />
                           </div>
                           {/* Price override */}
                           <div className="col-span-3">
-                            <label className="block text-[7px] uppercase text-[#0F4C3A]/60 font-bold mb-1">Price (INR) *</label>
+                            <label className="block text-[7px] uppercase text-[#351E28]/60 font-bold mb-1">Price (INR) *</label>
                             <input
                               type="number"
+                              min={0}
+                              onKeyDown={(e) => { if (e.key === '-' || e.key === '+') e.preventDefault(); }}
                               value={v.price}
                               onChange={(e) => {
                                 const newVars = [...variants];
-                                newVars[index].price = parseFloat(e.target.value) || 0;
+                                newVars[index].price = Math.max(0, parseFloat(e.target.value) || 0);
                                 setVariants(newVars);
                               }}
-                              className="w-full px-2 py-1 rounded bg-[#faf7f2] border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden font-mono"
+                              className="w-full px-2 py-1 rounded bg-[#F7F2EE] border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden font-mono"
                               required
                             />
                           </div>
                           {/* Stock override */}
                           <div className="col-span-2">
-                            <label className="block text-[7px] uppercase text-[#0F4C3A]/60 font-bold mb-1">Stock *</label>
+                            <label className="block text-[7px] uppercase text-[#351E28]/60 font-bold mb-1">Stock *</label>
                             <input
                               type="number"
+                              min={0}
+                              onKeyDown={(e) => { if (e.key === '-' || e.key === '+') e.preventDefault(); }}
                               value={v.stock}
                               onChange={(e) => {
                                 const newVars = [...variants];
-                                newVars[index].stock = parseInt(e.target.value) || 0;
+                                newVars[index].stock = Math.max(0, parseInt(e.target.value) || 0);
                                 setVariants(newVars);
                               }}
-                              className="w-full px-2 py-1 rounded bg-[#faf7f2] border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden font-mono"
+                              className="w-full px-2 py-1 rounded bg-[#F7F2EE] border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden font-mono"
                               required
                             />
                           </div>
                           {/* SKU override */}
                           <div className="col-span-3">
-                            <label className="block text-[7px] uppercase text-[#0F4C3A]/60 font-bold mb-1">SKU Override</label>
+                            <label className="block text-[7px] uppercase text-[#351E28]/60 font-bold mb-1">SKU Override</label>
                             <input
                               type="text"
                               value={v.sku || ""}
@@ -530,7 +599,7 @@ export default function ProductFormModal({
                                 setVariants(newVars);
                               }}
                               placeholder="e.g. SKU-A"
-                              className="w-full px-2 py-1 rounded bg-[#faf7f2] border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden font-mono"
+                              className="w-full px-2 py-1 rounded bg-[#F7F2EE] border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden font-mono"
                             />
                           </div>
                           {/* Delete */}
@@ -557,17 +626,17 @@ export default function ProductFormModal({
 
           {/* Section 3: Craftsmanship Specs */}
           <div>
-            <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#0F4C3A]/10 pb-1.5 mb-4 font-bold">
+            <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#351E28]/10 pb-1.5 mb-4 font-bold">
               3. Craftsmanship Specs
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {/* Metal Type */}
               <div>
-                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Metal Type *</label>
+                <label className="block text-[8px] tracking-wider uppercase text-[#351E28]/70 mb-1.5 font-bold">Metal Type *</label>
                 <select
                   value={material}
                   onChange={(e) => setMaterial(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
                   required
                 >
                   {!["Gold", "Platinum", "Silver", "Rose Gold", "White Gold", "Brass"].includes(material) && material && (
@@ -580,11 +649,11 @@ export default function ProductFormModal({
               </div>
               {/* Purity */}
               <div>
-                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Purity *</label>
+                <label className="block text-[8px] tracking-wider uppercase text-[#351E28]/70 mb-1.5 font-bold">Purity *</label>
                 <select
                   value={purity}
                   onChange={(e) => setPurity(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
                   required
                 >
                   {!["18K", "22K", "14K", "24K", "950 Platinum", "925 Sterling Silver"].includes(purity) && purity && (
@@ -597,34 +666,36 @@ export default function ProductFormModal({
               </div>
               {/* Weight */}
               <div>
-                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Weight (g) *</label>
+                <label className="block text-[8px] tracking-wider uppercase text-[#351E28]/70 mb-1.5 font-bold">Weight (g) *</label>
                 <input
                   type="number"
                   step="0.01"
+                  min={0}
+                  onKeyDown={(e) => { if (e.key === '-' || e.key === '+') e.preventDefault(); }}
                   value={weight}
-                  onChange={(e) => setWeight(parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden font-mono"
+                  onChange={(e) => setWeight(Math.max(0, parseFloat(e.target.value) || 0))}
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden font-mono"
                   required
                 />
               </div>
               {/* Dimensions */}
               <div>
-                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Dimensions</label>
+                <label className="block text-[8px] tracking-wider uppercase text-[#351E28]/70 mb-1.5 font-bold">Dimensions</label>
                 <input
                   type="text"
                   value={dimensions}
                   onChange={(e) => setDimensions(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
                   placeholder="8mm x 8mm"
                 />
               </div>
               {/* Gender */}
               <div>
-                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Gender</label>
+                <label className="block text-[8px] tracking-wider uppercase text-[#351E28]/70 mb-1.5 font-bold">Gender</label>
                 <select
                   value={gender}
                   onChange={(e) => setGender(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
                 >
                   <option value="Unisex">Unisex</option>
                   <option value="Men">Men</option>
@@ -633,28 +704,28 @@ export default function ProductFormModal({
               </div>
               {/* Occasion */}
               <div>
-                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Occasion</label>
+                <label className="block text-[8px] tracking-wider uppercase text-[#351E28]/70 mb-1.5 font-bold">Occasion</label>
                 <input
                   type="text"
                   value={occasion}
                   onChange={(e) => setOccasion(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
                   placeholder="Wedding, Festive"
                 />
               </div>
             </div>
 
             {/* Marketing / Flags Checkboxes */}
-            <div className="flex flex-wrap gap-6 bg-[#0F4C3A]/3 p-3.5 rounded-xl border border-[#0F4C3A]/8 font-mono text-[9px] uppercase tracking-wider mt-4">
-              <label className="flex items-center gap-2 select-none cursor-pointer font-bold text-[#0F4C3A]">
+            <div className="flex flex-wrap gap-6 bg-[#351E28]/3 p-3.5 rounded-xl border border-[#351E28]/8 font-mono text-[9px] uppercase tracking-wider mt-4">
+              <label className="flex items-center gap-2 select-none cursor-pointer font-bold text-[#351E28]">
                 <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} className="accent-luxury-gold" />
                 Featured Masterpiece
               </label>
-              <label className="flex items-center gap-2 select-none cursor-pointer font-bold text-[#0F4C3A]">
+              <label className="flex items-center gap-2 select-none cursor-pointer font-bold text-[#351E28]">
                 <input type="checkbox" checked={isTrending} onChange={(e) => setIsTrending(e.target.checked)} className="accent-luxury-gold" />
                 Trending Design
               </label>
-              <label className="flex items-center gap-2 select-none cursor-pointer font-bold text-[#0F4C3A]">
+              <label className="flex items-center gap-2 select-none cursor-pointer font-bold text-[#351E28]">
                 <input type="checkbox" checked={isBestSeller} onChange={(e) => setIsBestSeller(e.target.checked)} className="accent-luxury-gold" />
                 Best Seller
               </label>
@@ -670,14 +741,14 @@ export default function ProductFormModal({
             if (shouldShowSection) {
               return (
                 <div>
-                  <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#0F4C3A]/10 pb-1.5 mb-4 font-bold">
+                  <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#351E28]/10 pb-1.5 mb-4 font-bold">
                     4. Product Size Settings ({sizeConfig.label})
                   </h3>
                   
-                  <div className="space-y-4 bg-[#0F4C3A]/3 p-4 rounded-xl border border-[#0F4C3A]/8 text-left">
+                  <div className="space-y-4 bg-[#351E28]/3 p-4 rounded-xl border border-[#351E28]/8 text-left">
                     {sizeConfig.hasStandardSizes && (
                       <div>
-                        <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-2 font-bold">
+                        <label className="block text-[8px] tracking-wider uppercase text-[#351E28]/70 mb-2 font-bold">
                           Select Available Standard Sizes
                         </label>
                         <div className="flex flex-wrap gap-2">
@@ -691,7 +762,7 @@ export default function ProductFormModal({
                                 className={`px-3 py-1.5 border text-[10px] tracking-wider font-bold rounded-lg transition-all cursor-pointer ${
                                   isSelected
                                     ? "bg-luxury-gold border-luxury-gold text-black font-bold"
-                                    : "border-[#0F4C3A]/15 text-[#0F4C3A]/80 hover:border-luxury-gold bg-white/20"
+                                    : "border-[#351E28]/15 text-[#351E28]/80 hover:border-luxury-gold bg-white/20"
                                 }`}
                               >
                                 {size}
@@ -704,7 +775,7 @@ export default function ProductFormModal({
 
                     {sizeConfig.customSizesAsTags && (
                       <div>
-                        <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">
+                        <label className="block text-[8px] tracking-wider uppercase text-[#351E28]/70 mb-1.5 font-bold">
                           Add Custom Sizes / Options
                         </label>
                         <div className="flex gap-2 mb-3">
@@ -719,7 +790,7 @@ export default function ProductFormModal({
                               }
                             }}
                             placeholder="E.g. XS, 8.5, Custom Size Tag"
-                            className="flex-1 px-3 py-1.5 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                            className="flex-1 px-3 py-1.5 rounded-lg bg-white/3 border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
                           />
                           <button
                             type="button"
@@ -735,7 +806,7 @@ export default function ProductFormModal({
                             {sizes.map((tag) => (
                               <span
                                 key={tag}
-                                className="inline-flex items-center gap-1.5 bg-[#0F4C3A]/10 border border-[#0F4C3A]/15 text-[#0F4C3A] px-2.5 py-1 rounded-lg text-[10px] font-bold"
+                                className="inline-flex items-center gap-1.5 bg-[#351E28]/10 border border-[#351E28]/15 text-[#351E28] px-2.5 py-1 rounded-lg text-[10px] font-bold"
                               >
                                 {tag}
                                 <button
@@ -749,13 +820,13 @@ export default function ProductFormModal({
                             ))}
                           </div>
                         ) : (
-                          <p className="text-[9px] uppercase tracking-wider text-[#0F4C3A]/30 italic">No custom sizes defined yet.</p>
+                          <p className="text-[9px] uppercase tracking-wider text-[#351E28]/30 italic">No custom sizes defined yet.</p>
                         )}
                       </div>
                     )}
 
                     {sizeConfig.allowCustomSizeOption && (
-                      <div className="flex items-center gap-2 select-none cursor-pointer font-bold text-[#0F4C3A] font-mono text-[9px] uppercase tracking-wider mt-2">
+                      <div className="flex items-center gap-2 select-none cursor-pointer font-bold text-[#351E28] font-mono text-[9px] uppercase tracking-wider mt-2">
                         <label className="flex items-center gap-2 select-none cursor-pointer font-bold">
                           <input
                             type="checkbox"
@@ -773,11 +844,11 @@ export default function ProductFormModal({
             } else {
               return (
                 <div>
-                  <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#0F4C3A]/10 pb-1.5 mb-4 font-bold">
+                  <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#351E28]/10 pb-1.5 mb-4 font-bold">
                     4. Product Size Settings
                   </h3>
-                  <div className="bg-[#0F4C3A]/3 p-4 rounded-xl border border-[#0F4C3A]/8 text-left font-mono text-[9px] uppercase tracking-wider">
-                    <label className="flex items-center gap-2 select-none cursor-pointer font-bold text-[#0F4C3A]">
+                  <div className="bg-[#351E28]/3 p-4 rounded-xl border border-[#351E28]/8 text-left font-mono text-[9px] uppercase tracking-wider">
+                    <label className="flex items-center gap-2 select-none cursor-pointer font-bold text-[#351E28]">
                       <input
                         type="checkbox"
                         checked={allowCustomSize}
@@ -794,29 +865,30 @@ export default function ProductFormModal({
 
           {/* Section 5: Artisan Storytelling */}
           <div>
-            <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#0F4C3A]/10 pb-1.5 mb-4 font-bold">
+            <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#351E28]/10 pb-1.5 mb-4 font-bold">
               5. Artisan Storytelling
             </h3>
             <div className="space-y-4">
               {/* Short Description */}
               <div>
-                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Short Description *</label>
+                <label className="block text-[8px] tracking-wider uppercase text-[#351E28]/70 mb-1.5 font-bold">Short Description *</label>
                 <input
                   type="text"
                   value={shortDescription}
                   onChange={(e) => setShortDescription(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
                   required
                 />
               </div>
               {/* Long Description */}
               <div>
-                <label className="block text-[8px] tracking-wider uppercase text-[#0F4C3A]/70 mb-1.5 font-bold">Long Description</label>
+                <label className="block text-[8px] tracking-wider uppercase text-[#351E28]/70 mb-1.5 font-bold">Long Description *</label>
                 <textarea
                   rows={3}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#0F4C3A]/15 text-xs text-[#0F4C3A] focus:border-luxury-gold focus:outline-hidden"
+                  className="w-full px-3 py-2 rounded-lg bg-white/3 border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
+                  required
                 />
               </div>
             </div>
@@ -824,14 +896,14 @@ export default function ProductFormModal({
 
           {/* Section 6: Gallery Manager */}
           <div>
-            <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#0F4C3A]/10 pb-1.5 mb-4 font-bold">
+            <h3 className="font-serif text-[11px] uppercase tracking-wider text-luxury-gold border-b border-[#351E28]/10 pb-1.5 mb-4 font-bold">
               6. Gallery Manager
             </h3>
             
             {/* Images Manager */}
-            <div className="border border-[#0F4C3A]/10 p-4 rounded-xl space-y-4 bg-[#0F4C3A]/3">
-              <div className="flex justify-between items-center border-b border-[#0F4C3A]/10 pb-3">
-                <span className="text-[9px] tracking-wider uppercase font-mono font-bold text-[#0F4C3A]/60">Gallery Images</span>
+            <div className="border border-[#351E28]/10 p-4 rounded-xl space-y-4 bg-[#351E28]/3">
+              <div className="flex justify-between items-center border-b border-[#351E28]/10 pb-3">
+                <span className="text-[9px] tracking-wider uppercase font-mono font-bold text-[#351E28]/60">Gallery Images *</span>
                 <div className="relative">
                   <input
                     type="file"
@@ -843,7 +915,7 @@ export default function ProductFormModal({
                   />
                   <label
                     htmlFor="gallery-file-upload"
-                    className="flex items-center gap-1.5 border border-[#0F4C3A]/15 hover:border-luxury-gold px-4 py-2 rounded-full text-[9px] uppercase tracking-wider font-bold transition-all cursor-pointer text-[#0F4C3A] hover:bg-white/40"
+                    className="flex items-center gap-1.5 border border-[#351E28]/15 hover:border-luxury-gold px-4 py-2 rounded-full text-[9px] uppercase tracking-wider font-bold transition-all cursor-pointer text-[#351E28] hover:bg-white/40"
                   >
                     <Upload className="w-3.5 h-3.5" /> Upload Media
                   </label>
@@ -851,11 +923,11 @@ export default function ProductFormModal({
               </div>
 
               {images.length === 0 && !imageUploading ? (
-                <p className="text-[9.5px] uppercase tracking-wider text-[#0F4C3A]/30 text-center py-4">No images loaded yet.</p>
+                <p className="text-[9.5px] uppercase tracking-wider text-[#351E28]/30 text-center py-4">No images loaded yet.</p>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
                   {images.map((url, idx) => (
-                    <div key={idx} className="relative aspect-square rounded-lg border border-[#0F4C3A]/15 bg-white/30 flex items-center justify-center p-2 group">
+                    <div key={idx} className="relative aspect-square rounded-lg border border-[#351E28]/15 bg-white/30 flex items-center justify-center p-2 group">
                       {isVideoUrl(url) ? (
                         <video src={getImageUrl(url)} className="max-h-full max-w-full object-contain" muted playsInline />
                       ) : (
@@ -863,7 +935,7 @@ export default function ProductFormModal({
                       )}
                       
                       {/* Overlay commands */}
-                      <div className="absolute inset-0 bg-[#0F4C3A]/90 opacity-0 group-hover:opacity-100 flex flex-col justify-between p-1.5 transition-all rounded-lg">
+                      <div className="absolute inset-0 bg-[#351E28]/90 opacity-0 group-hover:opacity-100 flex flex-col justify-between p-1.5 transition-all rounded-lg">
                         <div className="flex justify-between items-center w-full">
                           <button
                             type="button"
@@ -876,7 +948,7 @@ export default function ProductFormModal({
                             type="button"
                             onClick={() => setThumbnail(url)}
                             className={`text-[8px] uppercase tracking-wider border rounded-sm px-1.5 py-0.5 ${
-                              thumbnail === url ? "bg-luxury-gold border-luxury-gold text-[#0F4C3A] font-bold" : "border-[#0F4C3A]/20 text-white/70"
+                              thumbnail === url ? "bg-luxury-gold border-luxury-gold text-[#351E28] font-bold" : "border-[#351E28]/20 text-white/70"
                             }`}
                           >
                             Thumb
@@ -920,18 +992,18 @@ export default function ProductFormModal({
         </div>
 
         {/* Submit Buttons Footer (Fixed) */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-[#0F4C3A]/10 mt-4 shrink-0 bg-transparent">
+        <div className="flex justify-end gap-3 pt-4 border-t border-[#351E28]/10 mt-4 shrink-0 bg-transparent">
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2.5 rounded-full border border-[#0F4C3A]/15 hover:border-luxury-gold text-[#0F4C3A] hover:text-[#0F4C3A] text-[9px] tracking-wider uppercase font-semibold transition-colors cursor-pointer"
+            className="px-6 py-2.5 rounded-full border border-[#351E28]/15 hover:border-luxury-gold text-[#351E28] hover:text-[#351E28] text-[9px] tracking-wider uppercase font-semibold transition-colors cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={formLoading || imageUploading}
-            className="bg-luxury-gold hover:opacity-90 text-[#0F4C3A] px-6 py-2.5 rounded-full text-[9px] tracking-wider uppercase font-bold flex items-center justify-center gap-1.5 shadow-md cursor-pointer disabled:opacity-50"
+            className="bg-luxury-gold hover:opacity-90 text-[#351E28] px-6 py-2.5 rounded-full text-[9px] tracking-wider uppercase font-bold flex items-center justify-center gap-1.5 shadow-md cursor-pointer disabled:opacity-50"
           >
             {formLoading ? (
               <>

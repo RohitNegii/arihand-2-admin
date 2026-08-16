@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Search, Eye, Loader2, AlertTriangle, Truck, X, Download } from "lucide-react";
+import { Search, Eye, Loader2, AlertTriangle, Truck, X } from "lucide-react";
 import { getRequest, putRequest } from "../services/api";
 import Table from "../components/ui/Table";
+import { toast } from "sonner";
 
 export default function Orders() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Search & Filter
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
 
   // Details Modal State
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
@@ -28,14 +28,12 @@ export default function Orders() {
 
   useEffect(() => {
     fetchOrders();
-  }, [statusFilter]);
+  }, []);
 
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const params: any = {};
-      if (statusFilter) params.status = statusFilter;
-      const res = await getRequest("/orders/admin/list", { params });
+      const res = await getRequest("/orders/admin/list");
 
       if (res.success) {
         setOrders(res.orders);
@@ -49,7 +47,7 @@ export default function Orders() {
 
   const handleOpenOrder = async (order: any) => {
     setSelectedOrder(order);
-    
+
     // setTrackingNumber(order.trackingNumber || "");
     // setCourierName(order.courierName || "");
     // setExpectedDelivery(
@@ -69,11 +67,19 @@ export default function Orders() {
     e.preventDefault();
     if (!selectedOrder) return;
 
-    if (trackingUrl && trackingUrl.trim() !== "") {
+    let formattedUrl = trackingUrl.trim();
+    if (formattedUrl !== "") {
+      if (!formattedUrl.match(/^(https?:\/\/)/i)) {
+        formattedUrl = `https://${formattedUrl}`;
+      }
+
       try {
-        new URL(trackingUrl);
+        const parsed = new URL(formattedUrl);
+        if (!parsed.hostname.includes(".")) {
+          throw new Error("Invalid domain name");
+        }
       } catch (_) {
-        alert("Please enter a valid tracking URL (e.g. https://www.delhivery.com/track/package/123456789)");
+        toast.error("Please enter a valid tracking URL (e.g. https://www.delhivery.com/track/package/123456789)");
         return;
       }
     }
@@ -82,49 +88,25 @@ export default function Orders() {
     try {
       const res = await putRequest(
         `/orders/admin/${selectedOrder._id}/shipping`,
-        { trackingUrl: trackingUrl.trim() }
+        { trackingUrl: formattedUrl }
       );
 
       if (res.success) {
         setSelectedOrder(res.order);
+        setTrackingUrl(formattedUrl);
         fetchOrders();
-        alert("Tracking URL updated successfully.");
+        if (formattedUrl === "") {
+          toast.success("Tracking URL cleared successfully.");
+        } else {
+          toast.success("Tracking URL updated successfully.");
+        }
       }
     } catch (err) {
       console.error("Failed to update shipping", err);
-      alert("Failed to update tracking URL.");
+      toast.error(formattedUrl === "" ? "Failed to clear tracking URL." : "Failed to update tracking URL.");
     } finally {
       setModalLoading(false);
     }
-  };
-
-  // Export Orders as CSV
-  const handleExportCSV = () => {
-    const headers = ["Order ID", "Customer Name", "Customer Email", "Subtotal", "GST Tax", "Shipping", "Grand Total", "Status", "Payment", "Courier", "Tracking ID", "Date Placed"];
-    const rows = orders.map((o) => [
-      o.orderNumber,
-      o.customer?.name || "N/A",
-      o.customer?.email || "N/A",
-      o.subtotal,
-      o.taxAmount,
-      o.shippingAmount,
-      o.grandTotal,
-      o.orderStatus,
-      o.paymentStatus,
-      o.courierName || "N/A",
-      o.trackingNumber || "N/A",
-      new Date(o.createdAt).toLocaleDateString()
-    ]);
-
-    const csvContent = "data:text/csv;charset=utf-8,"
-      + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `aurum_orders_export_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const filteredOrders = orders.filter((order) => {
@@ -146,7 +128,7 @@ export default function Orders() {
       header: "Customer",
       render: (order: any) => (
         <div className="text-left font-sans">
-          <span className="text-[#0F4C3A] font-medium text-xs">{order.customer?.name || "N/A"}</span><br />
+          <span className="text-[#351E28] font-medium text-xs">{order.customer?.name || "N/A"}</span><br />
           <span className="text-white/40 text-[9px] font-mono leading-none">{order.customer?.email || "N/A"}</span>
         </div>
       )
@@ -159,28 +141,13 @@ export default function Orders() {
     {
       header: "Payment",
       render: (order: any) => (
-        <span className={`text-[8.5px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full border ${
-          order.paymentStatus === "Paid"
+        <span className={`text-[8.5px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full border ${order.paymentStatus === "Paid"
             ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
             : order.paymentStatus === "Failed"
-            ? "bg-red-500/10 border-red-500/20 text-red-400"
-            : "bg-white/5 border-white/10 text-white/40"
-        }`}>
+              ? "bg-red-500/10 border-red-500/20 text-red-400"
+              : "bg-white/5 border-white/10 text-white/40"
+          }`}>
           {order.paymentStatus}
-        </span>
-      )
-    },
-    {
-      header: "Order Status",
-      render: (order: any) => (
-        <span className={`text-[8.5px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full border ${
-          order.orderStatus === "Delivered"
-            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-            : order.orderStatus === "Cancelled"
-            ? "bg-red-500/10 border-red-500/20 text-red-400"
-            : "bg-luxury-gold/10 border-luxury-gold/20 text-luxury-gold"
-        }`}>
-          {order.orderStatus}
         </span>
       )
     },
@@ -198,7 +165,7 @@ export default function Orders() {
         </a>
       ) : order.trackingNumber ? (
         <div>
-          <span className="text-[#0F4C3A] font-semibold text-[10px]">{order.courierName}</span><br />
+          <span className="text-[#351E28] font-semibold text-[10px]">{order.courierName}</span><br />
           <span className="text-white/35 text-[8.5px]">{order.trackingNumber}</span>
         </div>
       ) : (
@@ -206,69 +173,44 @@ export default function Orders() {
       )
     },
     {
-      header: "Action",
+      header: "Actions",
       className: "text-right",
       render: (order: any) => (
-        <button
-          onClick={() => handleOpenOrder(order)}
-          className="p-2 rounded-lg hover:bg-white/5 text-white/60 hover:text-white transition-colors"
-          title="View Details"
-        >
-          <Eye className="w-4.5 h-4.5" />
-        </button>
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => handleOpenOrder(order)}
+            className="p-2 rounded-lg hover:bg-white/5 text-white/60 hover:text-white transition-colors cursor-pointer"
+            title="View Order Details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+        </div>
       )
     }
   ];
 
   return (
     <div className="space-y-8 text-left">
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <span className="text-[8px] tracking-widest uppercase text-luxury-gold font-bold font-mono">transactions log</span>
-          <h1 className="font-serif text-2xl text-white mt-1">Orders Management</h1>
+          <span className="text-[8px] tracking-widest uppercase text-luxury-gold font-bold font-mono">transaction history</span>
+          <h1 className="font-serif text-2xl text-white mt-1">Orders Registry</h1>
         </div>
-
-        <button
-          onClick={handleExportCSV}
-          className="flex items-center gap-1.5 border border-white/10 hover:border-luxury-gold text-white hover:text-black hover:bg-white px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer"
-        >
-          <Download className="w-4 h-4" /> Export CSV List
-        </button>
       </div>
 
-      {/* Filter and Search Toolbar */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white/2 p-4 rounded-xl border border-white/5">
-        <div className="relative w-full md:max-w-md">
-          <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-white/30" />
-          </span>
+      {/* Filter Bar */}
+      <div className="glass-card rounded-2xl p-5 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="w-full md:w-1/2 relative">
+          <Search className="w-4 h-4 text-white/40 absolute left-3.5 top-3" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by order ID, customer name or email..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/3 border border-white/8 text-xs text-white focus:border-luxury-gold focus:outline-hidden font-mono"
+            className="w-full pl-10 pr-4 py-2 rounded-lg bg-white/3 border border-white/8 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden font-mono"
           />
-        </div>
-
-        <div className="flex items-center gap-4 w-full md:w-auto justify-end">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 rounded-lg bg-[#0d0d0d] border border-white/8 text-xs text-white focus:border-luxury-gold focus:outline-hidden font-mono"
-          >
-            <option value="">All Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Confirmed">Confirmed</option>
-            <option value="Processing">Processing</option>
-            <option value="Packed">Packed</option>
-            <option value="Shipped">Shipped</option>
-            <option value="Delivered">Delivered</option>
-            <option value="Cancelled">Cancelled</option>
-            <option value="Refunded">Refunded</option>
-          </select>
         </div>
       </div>
 
@@ -284,7 +226,7 @@ export default function Orders() {
       {showModal && selectedOrder && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-6 overflow-y-auto">
           <div className="glass-card rounded-3xl p-6 md:p-8 max-w-4xl w-full border border-white/10 relative text-left my-8">
-            
+
             {/* Close */}
             <button
               onClick={() => setShowModal(false)}
@@ -299,14 +241,19 @@ export default function Orders() {
                 <span className="text-[10px] text-white/40 block">ORDER PLACED: {new Date(selectedOrder.createdAt).toLocaleDateString()}</span>
               </div>
               <div className="text-right sm:text-left">
-                <span className="text-[#0F4C3A] font-semibold block">TOTAL VALUE: INR {selectedOrder.grandTotal.toLocaleString()}</span>
+                <span className="text-[#351E28] font-semibold block">GRAND TOTAL: INR {selectedOrder.grandTotal.toLocaleString()}</span>
+                {selectedOrder.discountAmount > 0 && (
+                  <span className="text-emerald-400 text-[10px] block font-semibold">
+                    DISCOUNT: -INR {selectedOrder.discountAmount.toLocaleString()} (Subtotal: INR {(selectedOrder.subtotal || 0).toLocaleString()})
+                  </span>
+                )}
                 <span className="text-emerald-400 text-[10px] uppercase block font-bold">PAYMENT: {selectedOrder.paymentStatus}</span>
               </div>
             </div>
 
             {/* Split layout inside detail drawer */}
             <div className="space-y-6">
-              
+
               {/* Items */}
               <div>
                 <span className="text-[8.5px] tracking-wider uppercase text-luxury-gold font-bold font-mono block mb-3 border-b border-white/5 pb-1">Items Purchased</span>
@@ -338,14 +285,14 @@ export default function Orders() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono text-[9px] uppercase tracking-wider text-white/50">
                 <div>
                   <span className="text-luxury-gold font-bold block mb-1">Shipping Mapped</span>
-                  <span className="text-[#0F4C3A] font-semibold font-sans">{selectedOrder.shippingAddress.name}</span><br />
+                  <span className="text-[#351E28] font-semibold font-sans">{selectedOrder.shippingAddress.name}</span><br />
                   <span>{selectedOrder.shippingAddress.addressLine1}</span><br />
                   <span>{selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state}</span><br />
                   <span>Phone: {selectedOrder.shippingAddress.phone}</span>
                 </div>
                 <div>
                   <span className="text-luxury-gold font-bold block mb-1">Billing Mapped</span>
-                  <span className="text-[#0F4C3A] font-semibold font-sans">{selectedOrder.billingAddress.name}</span><br />
+                  <span className="text-[#351E28] font-semibold font-sans">{selectedOrder.billingAddress.name}</span><br />
                   <span>{selectedOrder.billingAddress.addressLine1}</span><br />
                   <span>{selectedOrder.billingAddress.city}, {selectedOrder.billingAddress.state}</span>
                 </div>

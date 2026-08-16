@@ -82,16 +82,6 @@ export default function Dashboard() {
       header: "Total",
       className: "font-mono text-white",
       render: (order: any) => <span>INR {order.grandTotal.toLocaleString()}</span>
-    },
-    {
-      header: "Status",
-      render: (order: any) => (
-        <span className={`text-[8.5px] font-bold uppercase tracking-wider ${
-          order.orderStatus === "Delivered" ? "text-emerald-500" : "text-luxury-gold"
-        }`}>
-          {order.orderStatus}
-        </span>
-      )
     }
   ];
 
@@ -118,9 +108,8 @@ export default function Dashboard() {
     {
       header: "Status",
       render: (prod: any) => (
-        <span className={`text-[8.5px] font-bold uppercase tracking-wider ${
-          prod.status === "Published" ? "text-emerald-500" : "opacity-40"
-        }`}>
+        <span className={`text-[8.5px] font-bold uppercase tracking-wider ${prod.status === "Published" ? "text-emerald-500" : "opacity-40"
+          }`}>
           {prod.status}
         </span>
       )
@@ -136,14 +125,14 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8 text-left">
-      
+
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {kpis.map((kpi) => (
           <div key={kpi.name} className="glass-card rounded-2xl p-6 flex items-center justify-between">
             <div>
               <span className="text-[8.5px] uppercase tracking-widest text-white/40 font-semibold">{kpi.name}</span>
-              <p className="text-xl font-serif font-bold text-[#0F4C3A] mt-1.5 leading-none">{kpi.val}</p>
+              <p className="text-xl font-serif font-bold text-[#351E28] mt-1.5 leading-none">{kpi.val}</p>
             </div>
             <div className={`w-10 h-10 rounded-full bg-white/3 flex items-center justify-center border border-white/5 ${kpi.color}`}>
               <kpi.icon className="w-5 h-5" />
@@ -154,7 +143,7 @@ export default function Dashboard() {
 
       {/* Analytics chart and Top Products */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Sales recharts timeline (Span 2) */}
         <div className="lg:col-span-2 glass-card rounded-2xl p-6 flex flex-col justify-between">
           <div className="flex justify-between items-center mb-6">
@@ -207,10 +196,10 @@ export default function Dashboard() {
                 <div key={prod._id} className="flex justify-between items-center bg-white/2 p-3 rounded-xl border border-white/5 font-mono text-[10px]">
                   <div className="flex items-center gap-3">
                     <span className="text-[#ff5a1f] font-bold">#{idx + 1}</span>
-                    <span className="text-[#0F4C3A] font-medium line-clamp-1">{prod.name}</span>
+                    <span className="text-[#351E28] font-medium line-clamp-1">{prod.name}</span>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className="text-[#0F4C3A]">{prod.quantitySold} sold</span><br />
+                    <span className="text-[#351E28]">{prod.quantitySold} sold</span><br />
                     <span className="text-white/30 text-[8.5px]">INR {prod.revenueGenerated.toLocaleString()}</span>
                   </div>
                 </div>
@@ -223,7 +212,7 @@ export default function Dashboard() {
 
       {/* Recent Orders and Inventory warnings */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
+
         {/* Recent Orders logger */}
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center px-2">

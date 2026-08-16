@@ -29,19 +29,19 @@ export default function Modal({
         {/* Modal Close */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 text-[#0F4C3A]/50 hover:text-[#0F4C3A] transition-colors cursor-pointer"
+          className="absolute top-5 right-5 text-[#351E28]/50 hover:text-[#351E28] transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Modal Header */}
-        <div className="border-b border-[#0F4C3A]/10 pb-4 mb-6 shrink-0">
+        <div className="border-b border-[#351E28]/10 pb-4 mb-6 shrink-0">
           {subtitle && (
             <span className="text-[8px] tracking-widest uppercase text-luxury-gold font-bold font-mono block">
               {subtitle}
             </span>
           )}
-          <h2 className="font-serif text-xl text-[#0F4C3A] mt-1 font-light">
+          <h2 className="font-serif text-xl text-[#351E28] mt-1 font-light">
             {title}
           </h2>
         </div>

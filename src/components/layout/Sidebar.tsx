@@ -21,7 +21,7 @@ export default function Sidebar() {
     { name: "Products", path: "/products", icon: ShoppingBag },
     { name: "Categories", path: "/categories", icon: FolderOpen },
     { name: "Orders", path: "/orders", icon: FileText },
-    { name: "Patrons Directory", path: "/users", icon: UsersIcon },
+    { name: "Users Directory", path: "/users", icon: UsersIcon },
     { name: "FAQs Manager", path: "/faqs", icon: HelpCircle },
     { name: "Contact Messages", path: "/contact", icon: Mail },
     { name: "Settings", path: "/settings", icon: SettingsIcon }
@@ -36,7 +36,7 @@ export default function Sidebar() {
   const adminUser = JSON.parse(localStorage.getItem("aurum_admin_user") || "{}");
 
   return (
-    <aside className="w-64 bg-[#0F4C3A] border-r border-luxury-gold/15 flex flex-col h-screen fixed left-0 top-0 z-20">
+    <aside className="w-64 bg-[#351E28] border-r border-luxury-gold/15 flex flex-col h-screen fixed left-0 top-0 z-20">
       {/* Brand Header */}
       <div className="h-16 flex items-center px-6 border-b border-luxury-gold/15 gap-2">
         <Sparkles className="w-5 h-5 text-luxury-gold animate-pulse" />
@@ -53,11 +53,10 @@ export default function Sidebar() {
             <Link
               key={item.name}
               to={item.path}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-200 ${
-                isActive
-                  ? "bg-luxury-gold text-[#0F4C3A] shadow-[0_4px_12px_rgba(200,169,106,0.35)] scale-[1.02]"
-                  : "text-white/80 hover:text-white hover:bg-[#0B3A2C]"
-              }`}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-200 ${isActive
+                  ? "bg-luxury-gold text-[#351E28] shadow-[0_4px_12px_rgba(200,169,106,0.35)] scale-[1.02]"
+                  : "text-white/80 hover:text-white hover:bg-[#25151C]"
+                }`}
             >
               <item.icon className="w-4 h-4 shrink-0" />
               {item.name}
@@ -67,7 +66,7 @@ export default function Sidebar() {
       </nav>
 
       {/* User Session Info & Logout */}
-      <div className="p-4 border-t border-luxury-gold/15 bg-[#0B3A2C]">
+      <div className="p-4 border-t border-luxury-gold/15 bg-[#25151C]">
         <div className="flex items-center gap-3 mb-4 px-2">
           <div className="w-8 h-8 rounded-full bg-luxury-gold/15 border border-luxury-gold/30 flex items-center justify-center text-luxury-gold font-bold text-xs uppercase">
             {adminUser.name ? adminUser.name.charAt(0) : "A"}

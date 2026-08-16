@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { Search, Loader2, User, Mail, Phone, Calendar, Trash2, ShieldAlert } from "lucide-react";
-import { getRequest, deleteRequest } from "../services/api";
+import { Search, Loader2, User, Mail, Phone, Calendar, ShieldAlert, ShieldCheck } from "lucide-react";
+import { getRequest, putRequest } from "../services/api";
 import { toast } from "sonner";
 import Table from "../components/ui/Table";
-import DeleteConfirmModal from "../components/ui/DeleteConfirmModal";
+import Modal from "../components/ui/Modal";
 
 interface UserProfile {
   _id: string;
@@ -11,6 +11,7 @@ interface UserProfile {
   email: string;
   phone?: string;
   role: string;
+  isBlocked: boolean;
   createdAt: string;
 }
 
@@ -19,9 +20,11 @@ export default function Users() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [deleteConfirmName, setDeleteConfirmName] = useState<string>("");
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  // Block/Unblock Dialog state
+  const [blockConfirmId, setBlockConfirmId] = useState<string | null>(null);
+  const [blockConfirmName, setBlockConfirmName] = useState<string>("");
+  const [blockConfirmAction, setBlockConfirmAction] = useState<"block" | "unblock">("block");
+  const [blockLoading, setBlockLoading] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -35,27 +38,27 @@ export default function Users() {
         setUsers(res.users);
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to load patrons.");
+      toast.error(err.response?.data?.message || "Failed to load users.");
     } finally {
       setLoading(false);
     }
   };
 
-  const confirmDeleteUser = async () => {
-    if (!deleteConfirmId) return;
-    setDeleteLoading(true);
+  const handleToggleBlockUser = async () => {
+    if (!blockConfirmId) return;
+    setBlockLoading(true);
     try {
-      const res = await deleteRequest<{ success: boolean; message: string }>(`/auth/users/${deleteConfirmId}`);
+      const res = await putRequest<{ success: boolean; message: string }>(`/auth/users/${blockConfirmId}/toggle-block`);
       if (res.success) {
-        toast.success(res.message || "Patron removed successfully.");
-        setDeleteConfirmId(null);
-        setDeleteConfirmName("");
+        toast.success(res.message || `User account has been successfully ${blockConfirmAction}ed.`);
+        setBlockConfirmId(null);
+        setBlockConfirmName("");
         fetchUsers();
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to delete patron.");
+      toast.error(err.response?.data?.message || `Failed to ${blockConfirmAction} user.`);
     } finally {
-      setDeleteLoading(false);
+      setBlockLoading(false);
     }
   };
 
@@ -106,6 +109,17 @@ export default function Users() {
       )
     },
     {
+      header: "Status",
+      render: (item: UserProfile) => (
+        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider font-mono border ${item.isBlocked
+            ? "bg-red-500/10 border-red-500/20 text-red-400 animate-pulse"
+            : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+          }`}>
+          {item.isBlocked ? "Blocked" : "Active"}
+        </span>
+      )
+    },
+    {
       header: "Date Onboarded",
       className: "font-mono",
       render: (item: UserProfile) => (
@@ -125,13 +139,21 @@ export default function Users() {
       render: (item: UserProfile) => (
         <button
           onClick={() => {
-            setDeleteConfirmId(item._id);
-            setDeleteConfirmName(item.name);
+            setBlockConfirmId(item._id);
+            setBlockConfirmName(item.name);
+            setBlockConfirmAction(item.isBlocked ? "unblock" : "block");
           }}
-          className="p-2 rounded-lg hover:bg-red-500/10 text-white/40 hover:text-red-500 transition-colors cursor-pointer"
-          title="Delete patron record"
+          className={`p-2 rounded-lg transition-colors cursor-pointer ${item.isBlocked
+              ? "hover:bg-emerald-500/10 text-emerald-400 hover:text-emerald-500"
+              : "hover:bg-red-500/10 text-white/40 hover:text-red-500"
+            }`}
+          title={item.isBlocked ? "Unblock user account" : "Block user account"}
         >
-          <Trash2 className="w-4 h-4" />
+          {item.isBlocked ? (
+            <ShieldCheck className="w-4.5 h-4.5" />
+          ) : (
+            <ShieldAlert className="w-4.5 h-4.5" />
+          )}
         </button>
       )
     }
@@ -143,7 +165,7 @@ export default function Users() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <span className="text-[8px] tracking-widest uppercase text-luxury-gold font-bold font-mono">
-            patrons database
+            users database
           </span>
           <h1 className="font-serif text-2xl text-white mt-1">Users Directory</h1>
         </div>
@@ -168,21 +190,67 @@ export default function Users() {
         columns={columns}
         data={filteredUsers}
         loading={loading}
-        emptyMessage="No patron records matched the query."
+        emptyMessage="No user records matched the query."
       />
 
-      {/* Delete Confirmation Popup */}
-      <DeleteConfirmModal
-        isOpen={!!deleteConfirmId}
+      {/* Block/Unblock Confirmation Popup */}
+      <Modal
+        isOpen={!!blockConfirmId}
         onClose={() => {
-          setDeleteConfirmId(null);
-          setDeleteConfirmName("");
+          setBlockConfirmId(null);
+          setBlockConfirmName("");
         }}
-        onConfirm={confirmDeleteUser}
-        loading={deleteLoading}
-        title="Retire Patron Account"
-        message={`Are you sure you want to permanently delete the patron account for "${deleteConfirmName}"? This action is irreversible.`}
-      />
+        title={blockConfirmAction === "block" ? "Block User Account" : "Unblock User Account"}
+        subtitle="directory security"
+        maxWidthClassName="max-w-md"
+        scrollable={false}
+      >
+        <div className="text-center pt-2">
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${blockConfirmAction === "block"
+              ? "bg-red-500/10 border border-red-500/20 text-red-400"
+              : "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+            }`}>
+            {blockConfirmAction === "block" ? (
+              <ShieldAlert className="w-6 h-6" />
+            ) : (
+              <ShieldCheck className="w-6 h-6" />
+            )}
+          </div>
+
+          <p className="text-[#351E28]/70 text-xs mb-6 leading-relaxed">
+            {blockConfirmAction === "block"
+              ? `Are you sure you want to block the account for "${blockConfirmName}"? This user will be immediately logged out and prevented from signing in.`
+              : `Are you sure you want to unblock the account for "${blockConfirmName}"? This user will regain access to sign in.`
+            }
+          </p>
+
+          <div className="flex gap-3 justify-center">
+            <button
+              type="button"
+              onClick={() => {
+                setBlockConfirmId(null);
+                setBlockConfirmName("");
+              }}
+              disabled={blockLoading}
+              className="px-5 py-2 rounded-full border border-[#351E28]/15 text-[#351E28] hover:bg-[#351E28]/5 text-[9.5px] tracking-wider uppercase font-semibold transition-colors cursor-pointer disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleToggleBlockUser}
+              disabled={blockLoading}
+              className={`px-5 py-2 rounded-full text-[9.5px] tracking-wider uppercase font-bold transition-all shadow-md cursor-pointer disabled:opacity-50 flex items-center gap-1.5 justify-center text-white ${blockConfirmAction === "block"
+                  ? "bg-red-600 hover:bg-red-500"
+                  : "bg-emerald-600 hover:bg-emerald-500"
+                }`}
+            >
+              {blockLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              {blockConfirmAction === "block" ? "Block User" : "Unblock User"}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

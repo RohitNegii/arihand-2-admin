@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import Sidebar from "./components/layout/Sidebar";
 import Login from "./pages/Login";
@@ -19,7 +20,7 @@ function ProtectedLayout() {
   }
 
   return (
-    <div className="flex bg-luxury-bg min-h-screen text-[#0F4C3A] select-none">
+    <div className="flex bg-luxury-bg min-h-screen text-[#351E28] select-none">
       {/* Sidebar drawer */}
       <Sidebar />
 
@@ -34,6 +35,21 @@ function ProtectedLayout() {
 }
 
 export default function App() {
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && target.tagName === "INPUT" && (target as HTMLInputElement).type === "number") {
+        if (document.activeElement === target) {
+          (target as HTMLInputElement).blur();
+        }
+      }
+    };
+    window.addEventListener("wheel", handleWheel);
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+    };
+  }, []);
+
   return (
     <Router>
       <Toaster position="top-right" richColors />

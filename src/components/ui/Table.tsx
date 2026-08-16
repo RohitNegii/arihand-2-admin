@@ -21,11 +21,11 @@ export default function Table<T>({
   emptyMessage = "No records found."
 }: TableProps<T>) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-luxury-border bg-white/60 shadow-[0_8px_32px_rgba(15,76,58,0.03)] backdrop-blur-md">
+    <div className="overflow-hidden rounded-2xl border border-luxury-border bg-white/60 shadow-[0_8px_32px_rgba(53,30,40,0.03)] backdrop-blur-md">
       <div className="overflow-x-auto">
         <table className="w-full text-xs border-collapse">
           <thead>
-            <tr className="bg-[#0F4C3A]/5 border-b border-luxury-border text-[#0F4C3A]/70 uppercase text-[9px] tracking-wider text-left">
+            <tr className="bg-[#351E28]/5 border-b border-luxury-border text-[#351E28]/70 uppercase text-[9px] tracking-wider text-left">
               {columns.map((col, idx) => (
                 <th key={idx} className={`p-4 font-bold tracking-widest ${col.className || ""}`}>
                   {col.header}
@@ -39,24 +39,24 @@ export default function Table<T>({
                 <td colSpan={columns.length} className="py-20 text-center">
                   <div className="flex flex-col items-center justify-center gap-3">
                     <Loader2 className="w-6 h-6 animate-spin text-luxury-gold" />
-                    <span className="text-[10px] tracking-widest text-[#0F4C3A]/40 uppercase font-mono">Loading records...</span>
+                    <span className="text-[10px] tracking-widest text-[#351E28]/40 uppercase font-mono">Loading records...</span>
                   </div>
                 </td>
               </tr>
             ) : data.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="py-20 text-center">
-                  <span className="text-[10.5px] uppercase tracking-widest text-[#0F4C3A]/40 font-mono">{emptyMessage}</span>
+                  <span className="text-[10.5px] uppercase tracking-widest text-[#351E28]/40 font-mono">{emptyMessage}</span>
                 </td>
               </tr>
             ) : (
               data.map((item, rowIdx) => (
                 <tr
                   key={rowIdx}
-                  className="hover:bg-[#0F4C3A]/[0.02] transition-colors"
+                  className="hover:bg-[#351E28]/[0.02] transition-colors"
                 >
                   {columns.map((col, colIdx) => (
-                    <td key={colIdx} className={`p-4 text-[#0F4C3A] ${col.className || ""}`}>
+                    <td key={colIdx} className={`p-4 text-[#351E28] ${col.className || ""}`}>
                       {col.render(item, rowIdx)}
                     </td>
                   ))}

@@ -54,7 +54,7 @@ export default function ContactInquiries() {
     {
       header: "Name",
       render: (inquiry: any) => (
-        <span className="font-bold text-[#0F4C3A] font-serif tracking-wide block">
+        <span className="font-bold text-[#351E28] font-serif tracking-wide block">
           {inquiry.name}
         </span>
       )

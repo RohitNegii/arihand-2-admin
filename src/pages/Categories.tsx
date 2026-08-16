@@ -12,7 +12,7 @@ export default function Categories() {
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [editingId, setEditingId] = useState<string | null>(null);
-  
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState("");
@@ -28,10 +28,18 @@ export default function Categories() {
 
   const handleAddSizeTag = () => {
     const cleanTag = newSizeTag.trim();
-    if (cleanTag && !sizes.includes(cleanTag)) {
-      setSizes([...sizes, cleanTag]);
-      setNewSizeTag("");
+    if (!cleanTag) return;
+    if (sizes.map(s => s.toLowerCase()).includes(cleanTag.toLowerCase())) {
+      setFormError(`Size tag "${cleanTag}" is already added.`);
+      return;
     }
+    if (cleanTag.length > 30) {
+      setFormError("Size tag must be 30 characters or less.");
+      return;
+    }
+    setFormError("");
+    setSizes([...sizes, cleanTag]);
+    setNewSizeTag("");
   };
 
   const handleRemoveSizeTag = (tag: string) => {
@@ -84,15 +92,44 @@ export default function Categories() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name) {
+    const trimmedName = name.trim();
+    const trimmedDesc = description.trim();
+    const trimmedImage = image.trim();
+
+    if (!trimmedName) {
       setFormError("Category name is required.");
       return;
+    }
+
+    if (trimmedImage && !trimmedImage.match(/^(https?:\/\/|\/|.\/)/)) {
+      setFormError("Image URL must start with http://, https://, or a relative path.");
+      return;
+    }
+
+    let finalSizes = [...sizes];
+    const cleanTag = newSizeTag.trim();
+    if (cleanTag) {
+      if (sizes.map(s => s.toLowerCase()).includes(cleanTag.toLowerCase())) {
+        setFormError(`Size tag "${cleanTag}" is already added.`);
+        return;
+      }
+      if (cleanTag.length > 30) {
+        setFormError("Size tag must be 30 characters or less.");
+        return;
+      }
+      finalSizes.push(cleanTag);
     }
 
     setFormLoading(true);
     setFormError("");
 
-    const payload = { name, description, image, sizes, allowCustomSize };
+    const payload = {
+      name: trimmedName,
+      description: trimmedDesc,
+      image: trimmedImage,
+      sizes: finalSizes,
+      allowCustomSize
+    };
 
     try {
       if (modalMode === "create") {
@@ -127,7 +164,7 @@ export default function Categories() {
     {
       header: "Name",
       render: (cat: any) => (
-        <span className="font-serif text-sm font-light text-left text-[#0F4C3A] block">
+        <span className="font-serif text-sm font-light text-left text-[#351E28] block">
           {cat.name}
         </span>
       )
@@ -174,7 +211,7 @@ export default function Categories() {
 
   return (
     <div className="space-y-8 text-left">
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -275,7 +312,7 @@ export default function Categories() {
                     Add
                   </button>
                 </div>
-                
+
                 {sizes.length > 0 ? (
                   <div className="flex flex-wrap gap-1.5 p-2 rounded-lg border border-white/5 bg-white/2 max-h-36 overflow-y-auto">
                     {sizes.map((sz) => (
