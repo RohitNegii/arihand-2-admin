@@ -124,7 +124,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="space-y-8 text-left">
+    <div className="h-full overflow-y-auto space-y-8 text-left custom-scrollbar pr-2 min-h-0">
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

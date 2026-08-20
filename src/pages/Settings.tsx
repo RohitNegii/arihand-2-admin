@@ -116,7 +116,7 @@ export default function Settings() {
   ];
 
   return (
-    <div className="space-y-6 text-left max-w-2xl mx-auto">
+    <div className="h-full overflow-y-auto space-y-6 text-left max-w-2xl mx-auto custom-scrollbar pr-2 min-h-0">
       {/* Breadcrumbs & Header */}
       <div>
         <div className="flex items-center gap-1.5 text-[8.5px] uppercase tracking-[0.25em] font-mono text-[#351E28]/50 font-bold mb-2">

@@ -210,10 +210,10 @@ export default function Categories() {
   ];
 
   return (
-    <div className="space-y-8 text-left">
+    <div className="flex flex-col h-full space-y-6 text-left min-h-0 overflow-hidden">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <span className="text-[8px] tracking-widest uppercase text-luxury-gold font-bold font-mono">system schema</span>
           <h1 className="font-serif text-2xl text-white mt-1">Categories Directory</h1>
@@ -228,12 +228,14 @@ export default function Categories() {
       </div>
 
       {/* List Table */}
-      <Table
-        columns={columns}
-        data={categories}
-        loading={loading}
-        emptyMessage="No categories registered."
-      />
+      <div className="flex-1 min-h-0">
+        <Table
+          columns={columns}
+          data={categories}
+          loading={loading}
+          emptyMessage="No categories registered."
+        />
+      </div>
 
       {/* CRUD Category Modal */}
       {showModal && (

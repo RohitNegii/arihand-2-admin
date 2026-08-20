@@ -115,9 +115,9 @@ export default function ContactInquiries() {
   ];
 
   return (
-    <div className="space-y-8 text-left text-verdant-emerald select-none">
+    <div className="flex flex-col h-full space-y-6 text-left text-verdant-emerald select-none min-h-0 overflow-hidden">
       {/* Page Header */}
-      <div>
+      <div className="shrink-0">
         <h1 className="font-serif text-3xl font-light tracking-wide text-verdant-emerald">
           Contact Messages
         </h1>
@@ -127,12 +127,14 @@ export default function ContactInquiries() {
       </div>
 
       {/* INQUIRIES LIST / DATA TABLE */}
-      <Table
-        columns={columns}
-        data={inquiries}
-        loading={loading}
-        emptyMessage="No Inquiries Found"
-      />
+      <div className="flex-1 min-h-0">
+        <Table
+          columns={columns}
+          data={inquiries}
+          loading={loading}
+          emptyMessage="No Inquiries Found"
+        />
+      </div>
 
       {/* Delete Confirmation Popup */}
       <DeleteConfirmModal

@@ -190,10 +190,10 @@ export default function Orders() {
   ];
 
   return (
-    <div className="space-y-8 text-left">
+    <div className="flex flex-col h-full space-y-6 text-left min-h-0 overflow-hidden">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <span className="text-[8px] tracking-widest uppercase text-luxury-gold font-bold font-mono">transaction history</span>
           <h1 className="font-serif text-2xl text-white mt-1">Orders Registry</h1>
@@ -201,7 +201,7 @@ export default function Orders() {
       </div>
 
       {/* Filter Bar */}
-      <div className="glass-card rounded-2xl p-5 flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="shrink-0 glass-card rounded-2xl p-5 flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="w-full md:w-1/2 relative">
           <Search className="w-4 h-4 text-white/40 absolute left-3.5 top-3" />
           <input
@@ -215,12 +215,14 @@ export default function Orders() {
       </div>
 
       {/* Orders table */}
-      <Table
-        columns={columns}
-        data={filteredOrders}
-        loading={loading}
-        emptyMessage="No orders registered matching filters."
-      />
+      <div className="flex-1 min-h-0">
+        <Table
+          columns={columns}
+          data={filteredOrders}
+          loading={loading}
+          emptyMessage="No orders registered matching filters."
+        />
+      </div>
 
       {/* Order Details Accordion Drawer Modal */}
       {showModal && selectedOrder && (

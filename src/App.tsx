@@ -20,12 +20,12 @@ function ProtectedLayout() {
   }
 
   return (
-    <div className="flex bg-luxury-bg min-h-screen text-[#351E28] select-none">
+    <div className="flex bg-luxury-bg h-screen text-[#351E28] select-none overflow-hidden">
       {/* Sidebar drawer */}
       <Sidebar />
 
       {/* Main Content Workspace */}
-      <main className="flex-1 ml-64 p-8 min-h-screen relative overflow-y-auto">
+      <main className="flex-1 ml-64 p-8 h-screen relative flex flex-col overflow-hidden">
         {/* Glow */}
         <div className="absolute top-[10%] right-[-10%] w-[35vw] h-[35vw] bg-radial from-[#C8A96A]/6 to-transparent blur-[120px] pointer-events-none" />
         <Outlet />

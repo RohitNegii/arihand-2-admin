@@ -160,9 +160,9 @@ export default function Users() {
   ];
 
   return (
-    <div className="space-y-8 text-left">
+    <div className="flex flex-col h-full space-y-6 text-left min-h-0 overflow-hidden">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <span className="text-[8px] tracking-widest uppercase text-luxury-gold font-bold font-mono">
             users database
@@ -172,7 +172,7 @@ export default function Users() {
       </div>
 
       {/* Filter and Search */}
-      <div className="flex gap-4 max-w-md">
+      <div className="shrink-0 flex gap-4 max-w-md">
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
           <input
@@ -186,12 +186,14 @@ export default function Users() {
       </div>
 
       {/* Patrons Directory Table */}
-      <Table
-        columns={columns}
-        data={filteredUsers}
-        loading={loading}
-        emptyMessage="No user records matched the query."
-      />
+      <div className="flex-1 min-h-0">
+        <Table
+          columns={columns}
+          data={filteredUsers}
+          loading={loading}
+          emptyMessage="No user records matched the query."
+        />
+      </div>
 
       {/* Block/Unblock Confirmation Popup */}
       <Modal

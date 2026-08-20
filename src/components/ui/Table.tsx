@@ -21,10 +21,10 @@ export default function Table<T>({
   emptyMessage = "No records found."
 }: TableProps<T>) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-luxury-border bg-white/60 shadow-[0_8px_32px_rgba(53,30,40,0.03)] backdrop-blur-md">
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs border-collapse">
-          <thead>
+    <div className="overflow-hidden rounded-2xl border border-luxury-border bg-white/60 shadow-[0_8px_32px_rgba(53,30,40,0.03)] backdrop-blur-md flex flex-col h-full">
+      <div className="overflow-y-auto overflow-x-auto flex-1 custom-scrollbar min-h-0">
+        <table className="w-full text-xs border-collapse relative">
+          <thead className="sticky top-0 z-10 bg-[#EDE5DD]">
             <tr className="bg-[#351E28]/5 border-b border-luxury-border text-[#351E28]/70 uppercase text-[9px] tracking-wider text-left">
               {columns.map((col, idx) => (
                 <th key={idx} className={`p-4 font-bold tracking-widest ${col.className || ""}`}>

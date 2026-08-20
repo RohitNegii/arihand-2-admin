@@ -232,6 +232,70 @@ export default function ProductFormModal({
     setImages(updated);
   };
 
+  const [variantUploadingIndex, setVariantUploadingIndex] = useState<number | null>(null);
+
+  const handleVariantImageUpload = async (variantIdx: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    setVariantUploadingIndex(variantIdx);
+    setFormError("");
+    const files = Array.from(e.target.files);
+
+    const maxLimit = 50 * 1024 * 1024;
+    const oversized = files.filter((f) => f.size > maxLimit);
+    if (oversized.length > 0) {
+      setFormError("Failed to upload. Some files exceed the maximum limit of 50MB.");
+      setVariantUploadingIndex(null);
+      return;
+    }
+
+    try {
+      const processedFiles = await Promise.all(
+        files.map(async (file) => {
+          try {
+            return await compressImage(file, { maxWidth: 1600, maxHeight: 1600, quality: 0.8 });
+          } catch (compressErr) {
+            return file;
+          }
+        })
+      );
+
+      const formData = new FormData();
+      processedFiles.forEach((file) => formData.append("images", file));
+
+      const res = await postRequest("/products/upload-images", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      if (res.success) {
+        const uploadedUrls = res.urls;
+        setVariants((prev) => {
+          const updated = [...prev];
+          const currentImages = updated[variantIdx]?.images || [];
+          updated[variantIdx] = {
+            ...updated[variantIdx],
+            images: [...currentImages, ...uploadedUrls]
+          };
+          return updated;
+        });
+      }
+    } catch (err: any) {
+      setFormError(err.response?.data?.message || "Failed to upload variant media.");
+    } finally {
+      setVariantUploadingIndex(null);
+    }
+  };
+
+  const handleRemoveVariantImage = (variantIdx: number, urlToRemove: string) => {
+    setVariants((prev) => {
+      const updated = [...prev];
+      const currentImages = updated[variantIdx]?.images || [];
+      updated[variantIdx] = {
+        ...updated[variantIdx],
+        images: currentImages.filter((img) => img !== urlToRemove)
+      };
+      return updated;
+    });
+  };
+
   // Submit product creation/editing payload
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -365,7 +429,9 @@ export default function ProductFormModal({
         name: v.name.trim(),
         price: v.price,
         stock: v.stock,
-        sku: v.sku ? v.sku.toUpperCase().trim() : undefined
+        sku: v.sku ? v.sku.toUpperCase().trim() : undefined,
+        images: Array.isArray(v.images) ? v.images : [],
+        video: v.video ? v.video.trim() : undefined
       })) : []
     };
 
@@ -534,86 +600,141 @@ export default function ProductFormModal({
                   {variants.length === 0 ? (
                     <p className="text-[9px] uppercase tracking-wider text-[#351E28]/40 italic py-2">No variants added yet. Click + Add Variant Row above.</p>
                   ) : (
-                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    <div className="space-y-3 max-h-80 overflow-y-auto pr-1 custom-scrollbar">
                       {variants.map((v, index) => (
-                        <div key={index} className="grid grid-cols-12 gap-2 items-center bg-white/20 p-2.5 rounded-lg border border-[#351E28]/10">
-                          {/* Option Name */}
-                          <div className="col-span-3">
-                            <label className="block text-[7px] uppercase text-[#351E28]/60 font-bold mb-1">Option Name *</label>
-                            <input
-                              type="text"
-                              value={v.name}
-                              onChange={(e) => {
-                                const newVars = [...variants];
-                                newVars[index].name = e.target.value;
-                                setVariants(newVars);
-                              }}
-                              placeholder="e.g. Option A"
-                              className="w-full px-2 py-1 rounded bg-[#F7F2EE] border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
-                              required
-                            />
+                        <div key={index} className="bg-white/30 p-3 rounded-xl border border-[#351E28]/10 space-y-3">
+                          <div className="grid grid-cols-12 gap-2 items-center">
+                            {/* Option Name */}
+                            <div className="col-span-3">
+                              <label className="block text-[7px] uppercase text-[#351E28]/60 font-bold mb-1">Option Name *</label>
+                              <input
+                                type="text"
+                                value={v.name}
+                                onChange={(e) => {
+                                  const newVars = [...variants];
+                                  newVars[index].name = e.target.value;
+                                  setVariants(newVars);
+                                }}
+                                placeholder="e.g. Option A"
+                                className="w-full px-2 py-1 rounded bg-[#F7F2EE] border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
+                                required
+                              />
+                            </div>
+                            {/* Price override */}
+                            <div className="col-span-3">
+                              <label className="block text-[7px] uppercase text-[#351E28]/60 font-bold mb-1">Price (INR) *</label>
+                              <input
+                                type="number"
+                                min={0}
+                                onKeyDown={(e) => { if (e.key === '-' || e.key === '+') e.preventDefault(); }}
+                                value={v.price}
+                                onChange={(e) => {
+                                  const newVars = [...variants];
+                                  newVars[index].price = Math.max(0, parseFloat(e.target.value) || 0);
+                                  setVariants(newVars);
+                                }}
+                                className="w-full px-2 py-1 rounded bg-[#F7F2EE] border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden font-mono"
+                                required
+                              />
+                            </div>
+                            {/* Stock override */}
+                            <div className="col-span-2">
+                              <label className="block text-[7px] uppercase text-[#351E28]/60 font-bold mb-1">Stock *</label>
+                              <input
+                                type="number"
+                                min={0}
+                                onKeyDown={(e) => { if (e.key === '-' || e.key === '+') e.preventDefault(); }}
+                                value={v.stock}
+                                onChange={(e) => {
+                                  const newVars = [...variants];
+                                  newVars[index].stock = Math.max(0, parseInt(e.target.value) || 0);
+                                  setVariants(newVars);
+                                }}
+                                className="w-full px-2 py-1 rounded bg-[#F7F2EE] border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden font-mono"
+                                required
+                              />
+                            </div>
+                            {/* SKU override */}
+                            <div className="col-span-3">
+                              <label className="block text-[7px] uppercase text-[#351E28]/60 font-bold mb-1">SKU Override</label>
+                              <input
+                                type="text"
+                                value={v.sku || ""}
+                                onChange={(e) => {
+                                  const newVars = [...variants];
+                                  newVars[index].sku = e.target.value.toUpperCase();
+                                  setVariants(newVars);
+                                }}
+                                placeholder="e.g. SKU-A"
+                                className="w-full px-2 py-1 rounded bg-[#F7F2EE] border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden font-mono"
+                              />
+                            </div>
+                            {/* Delete */}
+                            <div className="col-span-1 pt-3.5 text-center">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setVariants(variants.filter((_, i) => i !== index));
+                                }}
+                                className="text-red-600 hover:text-red-800 text-xs font-bold cursor-pointer"
+                                title="Remove Variant"
+                              >
+                                &times;
+                              </button>
+                            </div>
                           </div>
-                          {/* Price override */}
-                          <div className="col-span-3">
-                            <label className="block text-[7px] uppercase text-[#351E28]/60 font-bold mb-1">Price (INR) *</label>
-                            <input
-                              type="number"
-                              min={0}
-                              onKeyDown={(e) => { if (e.key === '-' || e.key === '+') e.preventDefault(); }}
-                              value={v.price}
-                              onChange={(e) => {
-                                const newVars = [...variants];
-                                newVars[index].price = Math.max(0, parseFloat(e.target.value) || 0);
-                                setVariants(newVars);
-                              }}
-                              className="w-full px-2 py-1 rounded bg-[#F7F2EE] border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden font-mono"
-                              required
-                            />
-                          </div>
-                          {/* Stock override */}
-                          <div className="col-span-2">
-                            <label className="block text-[7px] uppercase text-[#351E28]/60 font-bold mb-1">Stock *</label>
-                            <input
-                              type="number"
-                              min={0}
-                              onKeyDown={(e) => { if (e.key === '-' || e.key === '+') e.preventDefault(); }}
-                              value={v.stock}
-                              onChange={(e) => {
-                                const newVars = [...variants];
-                                newVars[index].stock = Math.max(0, parseInt(e.target.value) || 0);
-                                setVariants(newVars);
-                              }}
-                              className="w-full px-2 py-1 rounded bg-[#F7F2EE] border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden font-mono"
-                              required
-                            />
-                          </div>
-                          {/* SKU override */}
-                          <div className="col-span-3">
-                            <label className="block text-[7px] uppercase text-[#351E28]/60 font-bold mb-1">SKU Override</label>
-                            <input
-                              type="text"
-                              value={v.sku || ""}
-                              onChange={(e) => {
-                                const newVars = [...variants];
-                                newVars[index].sku = e.target.value.toUpperCase();
-                                setVariants(newVars);
-                              }}
-                              placeholder="e.g. SKU-A"
-                              className="w-full px-2 py-1 rounded bg-[#F7F2EE] border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden font-mono"
-                            />
-                          </div>
-                          {/* Delete */}
-                          <div className="col-span-1 pt-3.5 text-center">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setVariants(variants.filter((_, i) => i !== index));
-                              }}
-                              className="text-red-600 hover:text-red-800 text-xs font-bold cursor-pointer"
-                              title="Remove Variant"
-                            >
-                              &times;
-                            </button>
+
+                          {/* Variant Specific Media Uploader */}
+                          <div className="border-t border-[#351E28]/10 pt-2 flex flex-col gap-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-[8px] uppercase tracking-wider font-bold text-[#351E28]/70">
+                                Variant Specific Media ({v.images ? v.images.length : 0} files)
+                              </span>
+                              <div className="relative">
+                                <input
+                                  type="file"
+                                  multiple
+                                  accept="image/*,video/*"
+                                  onChange={(e) => handleVariantImageUpload(index, e)}
+                                  className="hidden"
+                                  id={`variant-media-upload-${index}`}
+                                />
+                                <label
+                                  htmlFor={`variant-media-upload-${index}`}
+                                  className="flex items-center gap-1 border border-[#351E28]/15 hover:border-luxury-gold px-2.5 py-1 rounded-md text-[8px] uppercase tracking-wider font-bold transition-all cursor-pointer text-[#351E28] hover:bg-white/40"
+                                >
+                                  <Upload className="w-3 h-3" /> Upload Variant Media
+                                </label>
+                              </div>
+                            </div>
+
+                            {variantUploadingIndex === index && (
+                              <div className="flex items-center gap-2 text-[8px] text-luxury-gold font-bold uppercase tracking-wider py-1">
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading variant files...
+                              </div>
+                            )}
+
+                            {v.images && v.images.length > 0 && (
+                              <div className="flex flex-wrap gap-2 pt-1">
+                                {v.images.map((imgUrl: string, imgIdx: number) => (
+                                  <div key={imgIdx} className="relative w-12 h-12 rounded border border-[#351E28]/15 bg-white/50 flex items-center justify-center p-1 group overflow-hidden">
+                                    {isVideoUrl(imgUrl) ? (
+                                      <video src={getImageUrl(imgUrl)} className="max-h-full max-w-full object-contain" muted playsInline />
+                                    ) : (
+                                      <img src={getImageUrl(imgUrl)} alt={`Variant ${v.name} Media ${imgIdx}`} className="max-h-full max-w-full object-contain" />
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveVariantImage(index, imgUrl)}
+                                      className="absolute inset-0 bg-red-900/80 text-white font-bold text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                      title="Remove media from variant"
+                                    >
+                                      &times;
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}

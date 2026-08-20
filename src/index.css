@@ -119,6 +119,11 @@ table th {
   background-color: rgba(var(--color-primary-rgb), 0.04) !important;
 }
 
+table thead th {
+  color: rgba(var(--color-primary-rgb), 0.7) !important;
+  background-color: #EDE5DD !important;
+}
+
 table td {
   color: var(--color-primary) !important;
 }

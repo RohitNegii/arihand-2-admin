@@ -90,10 +90,10 @@ export default function Products() {
 
 
   return (
-    <div className="space-y-8 text-left">
+    <div className="flex flex-col h-full space-y-6 text-left min-h-0 overflow-hidden">
 
       {/* Page header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <span className="text-[8px] tracking-widest uppercase text-luxury-gold font-bold font-mono">fine jewelry</span>
           <h1 className="font-serif text-2xl text-white mt-1">Product Inventory</h1>
@@ -110,7 +110,7 @@ export default function Products() {
       {/* Search and inventory summary section */}
 
       {/* Search & Filter Bar */}
-      <div className="glass-card rounded-2xl p-5 flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="shrink-0 glass-card rounded-2xl p-5 flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="w-full md:w-1/3 relative">
           <input
             type="text"
@@ -188,12 +188,14 @@ export default function Products() {
       </div>
 
       {/* Products table */}
-      <ProductTable
-        products={products}
-        loading={loading}
-        onEdit={openEditModal}
-        onDelete={(id) => setDeleteConfirmId(id)}
-      />
+      <div className="flex-1 min-h-0">
+        <ProductTable
+          products={products}
+          loading={loading}
+          onEdit={openEditModal}
+          onDelete={(id) => setDeleteConfirmId(id)}
+        />
+      </div>
 
       {/* CRUD Product Modal */}
       <ProductFormModal
