@@ -290,7 +290,7 @@ export default function ProductFormModal({
       const currentImages = updated[variantIdx]?.images || [];
       updated[variantIdx] = {
         ...updated[variantIdx],
-        images: currentImages.filter((img) => img !== urlToRemove)
+        images: currentImages.filter((img: string) => img !== urlToRemove)
       };
       return updated;
     });
