@@ -61,4 +61,14 @@ export const getImageUrl = (path: string) => {
   return `${baseUrl}${path.startsWith("/") ? "" : "/"}${path}`;
 };
 
+export const SITE_URL = import.meta.env.VITE_SITE_URL || "http://localhost:5000";
+
+// Homepage media may live on the backend (/uploads) or ship with the storefront (/images)
+export const resolveSiteMedia = (path: string) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  if (path.startsWith("/uploads/")) return getImageUrl(path);
+  return `${SITE_URL.replace(/\/$/, "")}${path.startsWith("/") ? "" : "/"}${path}`;
+};
+
 export default api;

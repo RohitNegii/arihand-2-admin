@@ -10,6 +10,7 @@ import ContactInquiries from "./pages/ContactInquiries";
 import Users from "./pages/Users";
 import FAQs from "./pages/FAQs";
 import Settings from "./pages/Settings";
+import HomepageMedia from "./pages/HomepageMedia";
 import { Toaster } from "sonner";
 
 // Protected Layout Route wrapper
@@ -61,6 +62,7 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/products" element={<Products />} />
           <Route path="/categories" element={<Categories />} />
+          <Route path="/homepage-media" element={<HomepageMedia />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/users" element={<Users />} />
           <Route path="/faqs" element={<FAQs />} />
