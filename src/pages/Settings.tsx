@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { KeyRound, ShieldCheck, Eye, EyeOff, Lock, Percent, Tag } from "lucide-react";
+import { KeyRound, ShieldCheck, Eye, EyeOff, Lock, Percent, Tag, MessageCircle, Phone } from "lucide-react";
 import { getRequest, postRequest, putRequest } from "../services/api";
 import { toast } from "sonner";
 
@@ -20,6 +20,11 @@ export default function Settings() {
   const [discountLoading, setDiscountLoading] = useState<boolean>(false);
   const [fetchingDiscount, setFetchingDiscount] = useState<boolean>(true);
 
+  // WhatsApp Configuration State
+  const [whatsappNumber, setWhatsappNumber] = useState<string>("");
+  const [whatsappLoading, setWhatsappLoading] = useState<boolean>(false);
+  const [fetchingWhatsapp, setFetchingWhatsapp] = useState<boolean>(true);
+
   useEffect(() => {
     const fetchDiscountSettings = async () => {
       try {
@@ -34,8 +39,50 @@ export default function Settings() {
         setFetchingDiscount(false);
       }
     };
+
+    const fetchWhatsappSettings = async () => {
+      try {
+        const res = await getRequest("/settings/whatsapp");
+        if (res.success && res.whatsapp) {
+          setWhatsappNumber(res.whatsapp.number || "");
+        }
+      } catch (err: any) {
+        console.error("Failed to load whatsapp settings", err);
+      } finally {
+        setFetchingWhatsapp(false);
+      }
+    };
+
     fetchDiscountSettings();
+    fetchWhatsappSettings();
   }, []);
+
+  const handleWhatsappSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!whatsappNumber.trim()) {
+      toast.error("Please enter a valid WhatsApp phone number.");
+      return;
+    }
+
+    setWhatsappLoading(true);
+    try {
+      const res = await putRequest("/settings/whatsapp", {
+        number: whatsappNumber.trim()
+      });
+      if (res.success) {
+        toast.success("Business WhatsApp number updated successfully!");
+        if (res.whatsapp) {
+          setWhatsappNumber(res.whatsapp.number);
+        }
+      } else {
+        toast.error(res.message || "Failed to update WhatsApp settings.");
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Error updating WhatsApp settings.");
+    } finally {
+      setWhatsappLoading(false);
+    }
+  };
 
   const handleDiscountSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -306,6 +353,61 @@ export default function Settings() {
           </form>
         )}
       </div>
+
+      {/* WhatsApp Business Ordering Configuration Card */}
+      <div className="glass-card bg-white/40 border border-[#351E28]/10 rounded-3xl p-6 md:p-8 shadow-[0_8px_30px_rgba(53,30,40,0.02)] backdrop-blur-md">
+        <div className="flex items-center gap-2 mb-6 pb-3 border-b border-[#351E28]/10">
+          <MessageCircle className="w-5 h-5 text-luxury-gold" />
+          <div>
+            <h2 className="font-serif text-lg font-light text-[#351E28]">
+              WhatsApp Business Configuration
+            </h2>
+            <p className="text-[#351E28]/60 text-[10px] font-light tracking-wide mt-0.5">
+              Configure the business WhatsApp phone number where customers send pre-filled order confirmation messages.
+            </p>
+          </div>
+        </div>
+
+        {fetchingWhatsapp ? (
+          <div className="py-6 text-center text-xs font-mono text-[#351E28]/60">
+            Loading WhatsApp settings...
+          </div>
+        ) : (
+          <form onSubmit={handleWhatsappSubmit} className="space-y-5">
+            {/* WhatsApp Number Input */}
+            <div className="space-y-2">
+              <label className="block text-[9px] uppercase tracking-widest text-[#351E28]/70 font-bold">
+                Business WhatsApp Number *
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={whatsappNumber}
+                  onChange={(e) => setWhatsappNumber(e.target.value)}
+                  placeholder="e.g. +91 98765 43210 or 919876543210"
+                  required
+                  className="w-full text-xs text-[#351E28] bg-[#F7F2EE]/80 border border-[#351E28]/15 rounded-xl pl-10 pr-4 py-3.5 focus:outline-hidden focus:border-luxury-gold focus:bg-white placeholder-[#351E28]/30 transition-colors font-mono font-bold tracking-widest text-center"
+                />
+                <Phone className="w-4 h-4 text-[#351E28]/40 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              </div>
+              <p className="text-[10px] text-[#351E28]/50 font-sans tracking-wide">
+                Include country code (e.g. +91 for India). Customers will be redirected to <span className="font-mono text-luxury-gold">wa.me/&lt;number&gt;</span> with their order details prefilled.
+              </p>
+            </div>
+
+            {/* Action Button */}
+            <button
+              type="submit"
+              disabled={whatsappLoading}
+              className="bg-[#351E28] !text-white hover:!text-luxury-gold hover:scale-102 active:scale-98 text-[10px] tracking-widest uppercase font-bold py-3.5 px-8 rounded-full flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 w-full md:w-auto cursor-pointer disabled:opacity-50 disabled:no-underline font-mono mt-4 ml-auto"
+            >
+              <span>{whatsappLoading ? "Saving WhatsApp..." : "Save WhatsApp Number"}</span>
+              <ShieldCheck className="w-4.5 h-4.5 text-luxury-gold" />
+            </button>
+          </form>
+        )}
+      </div>
     </div>
   );
 }
+
