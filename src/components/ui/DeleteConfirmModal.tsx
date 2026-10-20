@@ -1,4 +1,3 @@
-
 import { AlertTriangle, Loader2 } from "lucide-react";
 import Modal from "./Modal";
 
@@ -28,16 +27,16 @@ export default function DeleteConfirmModal({
       isOpen={isOpen}
       onClose={onClose}
       title={title}
-      subtitle="catalog protection"
+      subtitle="Action Requires Confirmation"
       maxWidthClassName="max-w-md"
       scrollable={false}
     >
-      <div className="text-center pt-2">
-        <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 mx-auto mb-4">
-          <AlertTriangle className="w-6 h-6" />
+      <div className="text-center pt-2 pb-2">
+        <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-200/80 flex items-center justify-center text-red-500 mx-auto mb-4 shadow-sm">
+          <AlertTriangle className="w-7 h-7" />
         </div>
 
-        <p className="text-[#351E28]/70 text-xs mb-6 leading-relaxed">
+        <p className="text-[#351E28]/80 text-sm mb-7 leading-relaxed font-sans max-w-sm mx-auto">
           {message}
         </p>
 
@@ -46,7 +45,7 @@ export default function DeleteConfirmModal({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="px-5 py-2 rounded-full border border-[#351E28]/15 text-[#351E28] hover:bg-[#351E28]/5 text-[9.5px] tracking-wider uppercase font-semibold transition-colors cursor-pointer disabled:opacity-50"
+            className="px-6 py-2.5 rounded-full border border-[#351E28]/15 bg-white text-[#351E28] hover:bg-[#351E28]/5 text-xs tracking-wider uppercase font-semibold transition-all cursor-pointer disabled:opacity-50 shadow-xs"
           >
             {cancelText}
           </button>
@@ -54,9 +53,9 @@ export default function DeleteConfirmModal({
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className="bg-red-600 hover:bg-red-500 text-white px-5 py-2 rounded-full text-[9.5px] tracking-wider uppercase font-bold transition-all shadow-md cursor-pointer disabled:opacity-50 flex items-center gap-1.5 justify-center"
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-full text-xs tracking-wider uppercase font-bold transition-all shadow-md hover:shadow-lg cursor-pointer disabled:opacity-50 flex items-center gap-2 justify-center"
           >
-            {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             {confirmText}
           </button>
         </div>

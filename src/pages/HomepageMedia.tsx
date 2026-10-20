@@ -460,55 +460,85 @@ export default function HomepageMedia() {
       <Modal
         isOpen={!!editing}
         onClose={() => setEditing(null)}
-        title="Photo details"
-        subtitle="homepage media"
+        title="Photo Details"
+        subtitle="Homepage Media Slot"
         maxWidthClassName="max-w-md"
       >
         <form onSubmit={handleSaveEdit} className="space-y-5">
+          {/* Visual preview of the media item being edited */}
+          {editing && (
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#351E28]/5 border border-[#351E28]/10">
+              <div className="w-16 h-16 rounded-xl overflow-hidden bg-white border border-[#351E28]/10 shrink-0 flex items-center justify-center">
+                <img
+                  src={resolveSiteMedia(editing.url)}
+                  alt={editing.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = "none";
+                  }}
+                />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] uppercase font-mono tracking-wider text-luxury-gold font-bold block">
+                  Slot: {editing.slot}
+                </span>
+                <span className="text-xs font-serif font-semibold text-[#351E28] truncate block">
+                  {editing.title || "Untitled"}
+                </span>
+                <span className="text-[10px] text-[#351E28]/50 block font-mono">
+                  Display Order: #{editing.order + 1}
+                </span>
+              </div>
+            </div>
+          )}
+
           <div>
-            <label className="block text-[8.5px] tracking-wider uppercase text-[#351E28]/50 mb-1.5 font-semibold">
-              Name *
+            <label className="block text-[10px] tracking-[0.15em] uppercase text-[#351E28]/70 mb-1.5 font-bold font-mono">
+              Display Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-[#351E28]/12 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
-              placeholder="Royal Peacock Drops"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#351E28]/15 text-xs text-[#351E28] placeholder-[#351E28]/35 focus:outline-hidden focus:border-luxury-gold focus:ring-2 focus:ring-luxury-gold/25 transition-all font-sans"
+              placeholder="e.g. Royal Peacock Drops"
               required
             />
-            <p className="text-[9px] text-[#351E28]/40 mt-1">
-              Only shown here in the admin, to tell photos apart.
+            <p className="text-[10px] text-[#351E28]/45 mt-1">
+              Internal label shown here in the admin catalog to identify this asset.
             </p>
           </div>
 
           <div>
-            <label className="block text-[8.5px] tracking-wider uppercase text-[#351E28]/50 mb-1.5 font-semibold">
-              Description
+            <label className="block text-[10px] tracking-[0.15em] uppercase text-[#351E28]/70 mb-1.5 font-bold font-mono">
+              Alt Text / Accessibility Caption
             </label>
             <textarea
               rows={3}
               value={editAlt}
               onChange={(e) => setEditAlt(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-white border border-[#351E28]/12 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
-              placeholder="Gold peacock earrings with pearl clusters"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#351E28]/15 text-xs text-[#351E28] placeholder-[#351E28]/35 focus:outline-hidden focus:border-luxury-gold focus:ring-2 focus:ring-luxury-gold/25 transition-all leading-relaxed"
+              placeholder="e.g. Handcrafted 22K gold necklace with fine uncut diamonds and pearls"
             />
+            <p className="text-[10px] text-[#351E28]/45 mt-1">
+              Helps with storefront screen readers and SEO rankings.
+            </p>
           </div>
 
-          <div className="flex justify-end gap-3 pt-1">
+          <div className="flex justify-end gap-3 pt-3 border-t border-[#351E28]/10">
             <button
               type="button"
               onClick={() => setEditing(null)}
-              className="px-5 py-2 rounded-full border border-[#351E28]/15 text-[#351E28] text-[9px] tracking-wider uppercase font-semibold cursor-pointer"
+              className="px-6 py-2.5 rounded-full border border-[#351E28]/15 bg-white text-[#351E28] hover:bg-[#351E28]/5 text-xs tracking-wider uppercase font-semibold transition-all cursor-pointer shadow-2xs"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={savingEdit}
-              className="bg-luxury-gold hover:opacity-90 text-black px-5 py-2 rounded-full text-[9px] tracking-wider uppercase font-bold flex items-center gap-1 shadow-md cursor-pointer"
+              className="bg-[#C8A96A] hover:bg-[#B89858] text-[#351E28] px-6 py-2.5 rounded-full text-xs tracking-wider uppercase font-bold flex items-center gap-1.5 shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50"
             >
-              {savingEdit ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Save"}
+              {savingEdit ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Save Changes"}
             </button>
           </div>
         </form>

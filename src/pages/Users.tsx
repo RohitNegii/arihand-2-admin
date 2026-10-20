@@ -164,23 +164,25 @@ export default function Users() {
       {/* Header Section */}
       <div className="shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <span className="text-[8px] tracking-widest uppercase text-luxury-gold font-bold font-mono">
-            users database
+          <span className="text-[9px] tracking-[0.25em] uppercase text-luxury-gold font-bold font-mono">
+            Users Database
           </span>
-          <h1 className="font-serif text-2xl text-white mt-1">Users Directory</h1>
+          <h1 className="font-serif text-2xl md:text-3xl text-[#351E28] font-normal mt-1">
+            Users Directory
+          </h1>
         </div>
       </div>
 
       {/* Filter and Search */}
       <div className="shrink-0 flex gap-4 max-w-md">
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#351E28]/40 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, email, or phone..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/3 border border-white/8 text-xs text-white placeholder-white/30 focus:border-luxury-gold focus:outline-hidden transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/80 border border-[#351E28]/15 text-xs text-[#351E28] placeholder-[#351E28]/35 focus:outline-hidden focus:border-luxury-gold focus:ring-2 focus:ring-luxury-gold/25 transition-all shadow-xs"
           />
         </div>
       </div>

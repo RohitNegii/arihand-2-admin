@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
 const api = axios.create({
   baseURL: API_URL
@@ -61,7 +61,7 @@ export const getImageUrl = (path: string) => {
   return `${baseUrl}${path.startsWith("/") ? "" : "/"}${path}`;
 };
 
-export const SITE_URL = import.meta.env.VITE_SITE_URL || "http://localhost:5000";
+export const SITE_URL = import.meta.env.VITE_SITE_URL || "http://localhost:5001";
 
 // Homepage media may live on the backend (/uploads) or ship with the storefront (/images)
 export const resolveSiteMedia = (path: string) => {

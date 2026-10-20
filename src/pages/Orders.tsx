@@ -11,7 +11,8 @@ import {
   PackageCheck,
   ChevronLeft,
   ChevronRight,
-  Filter
+  Filter,
+  ExternalLink
 } from "lucide-react";
 import { getRequest, putRequest, getImageUrl } from "../services/api";
 import Table from "../components/ui/Table";
@@ -336,30 +337,30 @@ export default function Orders() {
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="shrink-0 glass-card rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between border border-luxury-border bg-white/60">
+      <div className="shrink-0 bg-white/80 backdrop-blur-md rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between border border-[#351E28]/10 shadow-xs">
         {/* Search */}
         <form onSubmit={handleSearchSubmit} className="w-full md:w-1/2 relative flex items-center gap-2">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-[#351E28]/40 absolute left-3.5 top-3" />
+            <Search className="w-4 h-4 text-[#351E28]/40 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by order ID, customer name, phone, email..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-[#F7F2EE]/80 border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden font-sans"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#F7F2EE]/60 border border-[#351E28]/15 text-xs text-[#351E28] placeholder-[#351E28]/35 focus:outline-hidden focus:border-luxury-gold focus:ring-2 focus:ring-luxury-gold/25 focus:bg-white transition-all font-sans"
             />
           </div>
           <button
             type="submit"
-            className="px-4 py-2 rounded-xl bg-[#351E28] text-white hover:text-luxury-gold text-xs font-sans font-bold cursor-pointer transition-colors shrink-0"
+            className="px-5 py-2.5 rounded-xl bg-[#351E28] hover:bg-[#2A161F] text-white hover:text-luxury-gold text-xs font-sans font-bold cursor-pointer transition-all shadow-xs shrink-0"
           >
             Search
           </button>
         </form>
 
         {/* Status Filter */}
-        <div className="w-full md:w-auto flex items-center gap-3">
-          <div className="flex items-center gap-2 text-xs text-[#351E28]/60 font-sans">
+        <div className="w-full md:w-auto flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 text-xs text-[#351E28]/70 font-sans font-medium">
             <Filter className="w-3.5 h-3.5 text-luxury-gold" />
             <span>Filter Status:</span>
           </div>
@@ -369,7 +370,7 @@ export default function Orders() {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-2 rounded-xl bg-[#F7F2EE]/80 border border-[#351E28]/15 text-xs text-[#351E28] font-sans focus:border-luxury-gold focus:outline-hidden cursor-pointer"
+            className="px-3.5 py-2.5 rounded-xl bg-[#F7F2EE]/60 border border-[#351E28]/15 text-xs text-[#351E28] font-sans font-semibold focus:outline-hidden focus:border-luxury-gold focus:ring-2 focus:ring-luxury-gold/25 cursor-pointer transition-all"
           >
             <option value="ALL">All Statuses</option>
             {ORDER_STATUSES.map((st) => (
@@ -419,41 +420,42 @@ export default function Orders() {
 
       {/* Order Details Drawer / Modal */}
       {showModal && selectedOrder && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 md:p-6 overflow-y-auto">
-          <div className="glass-card bg-[#FAF7F4] rounded-3xl p-6 md:p-8 max-w-4xl w-full border border-[#351E28]/15 relative text-left my-8 shadow-2xl max-h-[90vh] flex flex-col">
-            {/* Close */}
+        <div className="fixed inset-0 z-50 bg-[#351E28]/45 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 md:p-6 overflow-y-auto animate-fade-in">
+          <div className="bg-[#FDFBF9] rounded-3xl p-6 md:p-8 max-w-4xl w-full border border-[#C8A96A]/25 relative text-left my-6 shadow-[0_25px_60px_-15px_rgba(53,30,40,0.3)] max-h-[90vh] flex flex-col">
+            {/* Close Button */}
             <button
               onClick={() => setShowModal(false)}
-              className="absolute top-5 right-5 text-[#351E28]/50 hover:text-[#351E28] cursor-pointer"
+              className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-full bg-[#351E28]/5 hover:bg-[#351E28]/12 text-[#351E28]/60 hover:text-[#351E28] transition-all flex items-center justify-center cursor-pointer hover:rotate-90 duration-200"
+              aria-label="Close modal"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
 
             {/* Modal Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#351E28]/10 pb-4 mb-6 gap-2">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#351E28]/10 pb-4 mb-6 gap-2 pr-8">
               <div>
                 <div className="flex items-center gap-3">
-                  <span className="text-[#351E28] font-bold font-mono text-base">
+                  <span className="text-[#351E28] font-bold font-mono text-lg">
                     #{selectedOrder.orderNumber}
                   </span>
                   <span
-                    className={`text-[9px] uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${getStatusBadgeStyle(
+                    className={`text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full border shadow-2xs ${getStatusBadgeStyle(
                       selectedOrder.orderStatus
                     )}`}
                   >
                     {selectedOrder.orderStatus}
                   </span>
                 </div>
-                <span className="text-[10px] text-[#351E28]/50 block font-mono mt-1">
+                <span className="text-[11px] text-[#351E28]/50 block font-mono mt-1">
                   Placed: {new Date(selectedOrder.createdAt).toLocaleString()}
                 </span>
               </div>
-              <div className="text-right sm:text-right">
-                <span className="text-[#351E28] font-semibold block text-base font-serif">
-                  Grand Total: ₹{selectedOrder.grandTotal.toLocaleString("en-IN")}
+              <div className="text-left sm:text-right">
+                <span className="text-[#351E28] font-serif text-lg font-normal block">
+                  Grand Total: <span className="font-semibold text-xl">₹{selectedOrder.grandTotal.toLocaleString("en-IN")}</span>
                 </span>
                 {selectedOrder.discountAmount > 0 && (
-                  <span className="text-emerald-600 text-[10px] block font-mono">
+                  <span className="text-emerald-700 text-xs block font-mono font-medium">
                     Discount Applied: -₹{selectedOrder.discountAmount.toLocaleString("en-IN")} (Subtotal: ₹
                     {(selectedOrder.subtotal || 0).toLocaleString("en-IN")})
                   </span>
@@ -462,21 +464,27 @@ export default function Orders() {
             </div>
 
             {/* Modal Scrollable Body */}
-            <div className="overflow-y-auto flex-1 space-y-6 pr-1 custom-scrollbar">
+            <div className="overflow-y-auto flex-1 space-y-6 pr-2 custom-scrollbar">
               {/* Manual Status Management Section */}
-              <div className="border border-luxury-gold/30 p-5 rounded-2xl bg-amber-50/40">
-                <h3 className="font-serif text-sm text-[#351E28] font-semibold mb-3 flex items-center gap-2">
-                  <CheckCircle2 className="w-4.5 h-4.5 text-luxury-gold" /> Manual Status Management
-                </h3>
-                <form onSubmit={handleModalStatusUpdate} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+              <div className="border border-[#C8A96A]/30 p-5 rounded-2xl bg-[#C8A96A]/8 shadow-2xs">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-serif text-base text-[#351E28] font-semibold flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-luxury-gold" /> Lifecycle Status Management
+                  </h3>
+                  <span className="text-[10px] uppercase font-mono font-bold text-luxury-gold">
+                    Current: {selectedOrder.orderStatus}
+                  </span>
+                </div>
+
+                <form onSubmit={handleModalStatusUpdate} className="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-end">
                   <div className="md:col-span-4">
-                    <label className="block text-[8.5px] uppercase tracking-widest text-[#351E28]/70 font-bold mb-1">
-                      Change Lifecycle Status
+                    <label className="block text-[10px] uppercase tracking-wider text-[#351E28]/70 font-bold font-mono mb-1.5">
+                      New Lifecycle Status
                     </label>
                     <select
                       value={newStatus}
                       onChange={(e) => setNewStatus(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-xl bg-white border border-[#351E28]/20 text-xs text-[#351E28] font-sans font-semibold focus:border-luxury-gold focus:outline-hidden cursor-pointer"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#351E28]/15 text-xs text-[#351E28] font-sans font-semibold focus:outline-hidden focus:border-luxury-gold focus:ring-2 focus:ring-luxury-gold/25 cursor-pointer shadow-xs"
                     >
                       {ORDER_STATUSES.map((st) => (
                         <option key={st} value={st}>
@@ -487,26 +495,29 @@ export default function Orders() {
                   </div>
 
                   <div className="md:col-span-5">
-                    <label className="block text-[8.5px] uppercase tracking-widest text-[#351E28]/70 font-bold mb-1">
-                      Status Note / Comment (Optional)
+                    <label className="block text-[10px] uppercase tracking-wider text-[#351E28]/70 font-bold font-mono mb-1.5">
+                      Status Note / Comment <span className="text-[9px] text-[#351E28]/40 font-normal lowercase">(optional)</span>
                     </label>
                     <input
                       type="text"
                       value={statusComment}
                       onChange={(e) => setStatusComment(e.target.value)}
                       placeholder="e.g. Confirmed with customer via WhatsApp"
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#351E28]/20 text-xs text-[#351E28] font-sans focus:border-luxury-gold focus:outline-hidden"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#351E28]/15 text-xs text-[#351E28] font-sans focus:outline-hidden focus:border-luxury-gold focus:ring-2 focus:ring-luxury-gold/25 placeholder-[#351E28]/35 shadow-xs"
                     />
                   </div>
 
                   <div className="md:col-span-3">
                     <button
                       type="submit"
-                      disabled={statusUpdating || newStatus === selectedOrder.orderStatus && !statusComment}
-                      className="w-full bg-[#351E28] hover:text-luxury-gold text-white text-[10px] uppercase tracking-widest font-bold py-2.5 rounded-xl transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                      disabled={statusUpdating || (newStatus === selectedOrder.orderStatus && !statusComment)}
+                      className="w-full bg-[#351E28] hover:bg-[#2A161F] hover:text-luxury-gold text-white text-xs uppercase tracking-wider font-bold py-2.5 rounded-xl transition-all disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2 shadow-sm"
                     >
                       {statusUpdating ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Updating...</span>
+                        </>
                       ) : (
                         "Update Status"
                       )}
@@ -643,30 +654,60 @@ export default function Orders() {
               )}
 
               {/* Shipping & Courier Tracking Form */}
-              <div className="border border-[#351E28]/10 p-4 rounded-xl bg-white/40">
-                <h3 className="font-serif text-sm text-[#351E28] mb-3 flex items-center gap-2">
-                  <Truck className="w-4.5 h-4.5 text-luxury-gold" /> Shipment Tracking URL
-                </h3>
+              <div className="border border-[#351E28]/10 p-5 rounded-2xl bg-white shadow-2xs space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-serif text-base text-[#351E28] font-semibold flex items-center gap-2">
+                    <Truck className="w-5 h-5 text-luxury-gold" /> Shipment & Logistics Tracking URL
+                  </h3>
+                  {trackingUrl && (
+                    <a
+                      href={trackingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[10px] uppercase font-mono font-bold text-luxury-gold hover:underline"
+                    >
+                      <span>Open Link</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
+
                 <form onSubmit={handleUpdateShipping} className="space-y-3">
                   <div>
-                    <label className="block text-[8px] tracking-wider uppercase text-[#351E28]/60 mb-1 font-semibold">
-                      Tracking URL
+                    <label className="block text-[10px] uppercase tracking-wider text-[#351E28]/70 font-bold font-mono mb-1.5">
+                      Carrier Tracking URL
                     </label>
-                    <input
-                      type="text"
-                      value={trackingUrl}
-                      onChange={(e) => setTrackingUrl(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-white border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
-                      placeholder="https://www.delhivery.com/track/package/123456789"
-                    />
+                    <div className="relative">
+                      <Truck className="w-4 h-4 text-[#351E28]/40 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={trackingUrl}
+                        onChange={(e) => setTrackingUrl(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#F7F2EE]/50 border border-[#351E28]/15 text-xs text-[#351E28] placeholder-[#351E28]/35 focus:outline-hidden focus:border-luxury-gold focus:ring-2 focus:ring-luxury-gold/25 font-mono shadow-xs"
+                        placeholder="https://www.delhivery.com/track/package/123456789 or https://shiprocket.co/..."
+                      />
+                    </div>
+                    <p className="text-[10px] text-[#351E28]/45 mt-1 font-sans">
+                      Customers will receive this direct tracking link to monitor shipment status.
+                    </p>
                   </div>
-                  <button
-                    type="submit"
-                    disabled={modalLoading}
-                    className="border border-[#351E28]/20 hover:border-luxury-gold hover:bg-[#351E28] hover:text-white text-[9.5px] uppercase tracking-wider font-bold py-2 px-6 rounded-full transition-all cursor-pointer"
-                  >
-                    {modalLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin mx-auto" /> : "Save Tracking URL"}
-                  </button>
+
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="submit"
+                      disabled={modalLoading}
+                      className="bg-[#351E28] hover:bg-[#2A161F] text-white hover:text-luxury-gold text-xs uppercase tracking-wider font-bold py-2.5 px-6 rounded-full transition-all cursor-pointer shadow-xs disabled:opacity-40 flex items-center gap-2"
+                    >
+                      {modalLoading ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Saving...</span>
+                        </>
+                      ) : (
+                        "Save Tracking URL"
+                      )}
+                    </button>
+                  </div>
                 </form>
               </div>
             </div>

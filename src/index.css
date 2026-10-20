@@ -67,42 +67,34 @@ body {
 
 /* Glassmorphism card utility */
 .glass-card {
-  background: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(var(--color-primary-rgb), 0.08);
-  box-shadow: 0 8px 32px rgba(var(--color-primary-rgb), 0.05);
+  box-shadow: 0 8px 32px rgba(var(--color-primary-rgb), 0.04);
 }
 
-/* Global Theme Overrides for Green & Cream admin inputs */
-input,
+/* Global Theme Overrides for inputs */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
 select,
 textarea {
-  color: var(--color-primary) !important;
-  background-color: rgba(255, 255, 255, 0.8) !important;
-  border-color: rgba(var(--color-primary-rgb), 0.15) !important;
+  color: var(--color-primary);
+  border-color: rgba(var(--color-primary-rgb), 0.15);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
-input::placeholder {
-  color: rgba(var(--color-primary-rgb), 0.4) !important;
-}
-
-/* Form fields nested inside dialogs/cards */
-.glass-card select,
-.glass-card input,
-.glass-card textarea {
-  color: var(--color-primary) !important;
-  background-color: rgba(255, 255, 255, 0.95) !important;
-  border-color: rgba(var(--color-primary-rgb), 0.2) !important;
+input::placeholder,
+textarea::placeholder {
+  color: rgba(var(--color-primary-rgb), 0.35);
 }
 
 select option {
-  background-color: var(--color-background) !important;
-  color: var(--color-primary) !important;
+  background-color: #FFFFFF;
+  color: var(--color-primary);
 }
 
 label {
-  color: rgba(var(--color-primary-rgb), 0.7) !important;
+  color: rgba(var(--color-primary-rgb), 0.7);
 }
 
 h1,
@@ -111,7 +103,7 @@ h3,
 h4,
 h5,
 h6 {
-  color: var(--color-primary) !important;
+  color: var(--color-primary);
 }
 
 table th {
@@ -154,8 +146,8 @@ table td {
 
 /* Thin custom scrollbar for inner scrollable blocks */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -163,10 +155,36 @@ table td {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(var(--color-secondary-rgb), 0.4);
-  border-radius: 2px;
+  background: rgba(var(--color-secondary-rgb), 0.35);
+  border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--color-secondary-rgb), 0.7);
+}
+
+/* Keyframe animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-shake {
+  animation: shake 0.35s ease-in-out;
 }

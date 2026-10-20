@@ -95,36 +95,38 @@ export default function Products() {
       {/* Page header */}
       <div className="shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <span className="text-[8px] tracking-widest uppercase text-luxury-gold font-bold font-mono">fine jewelry</span>
-          <h1 className="font-serif text-2xl text-white mt-1">Product Inventory</h1>
+          <span className="text-[9px] tracking-[0.25em] uppercase text-luxury-gold font-bold font-mono">
+            Fine Jewelry Atelier
+          </span>
+          <h1 className="font-serif text-2xl md:text-3xl text-[#351E28] font-normal mt-1">
+            Product Inventory
+          </h1>
         </div>
 
         <button
           onClick={openCreateModal}
-          className="flex items-center gap-1.5 bg-luxury-gold hover:opacity-90 text-black px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer"
+          className="flex items-center gap-2 bg-[#C8A96A] hover:bg-[#B89858] text-[#351E28] px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all shadow-md hover:shadow-lg cursor-pointer hover:scale-102 active:scale-98"
         >
           <Plus className="w-4 h-4" /> Create Product
         </button>
       </div>
 
-      {/* Search and inventory summary section */}
-
       {/* Search & Filter Bar */}
-      <div className="shrink-0 glass-card rounded-2xl p-5 flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="shrink-0 bg-white/80 backdrop-blur-md rounded-2xl p-4 md:p-5 flex flex-col md:flex-row gap-4 items-center justify-between border border-[#351E28]/10 shadow-xs">
         <div className="w-full md:w-1/3 relative">
           <input
             type="text"
             placeholder="Search SKU, Name, Metal, Stone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-3 pr-10 py-2 rounded-xl bg-white/3 border border-white/8 text-xs text-white focus:border-luxury-gold focus:outline-hidden placeholder-white/30"
+            className="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-[#F7F2EE]/60 border border-[#351E28]/15 text-xs text-[#351E28] placeholder-[#351E28]/35 focus:outline-hidden focus:border-luxury-gold focus:ring-2 focus:ring-luxury-gold/25 focus:bg-white transition-all font-sans"
           />
           {searchTerm && (
             <button
               onClick={() => setSearchTerm("")}
-              className="absolute right-3 top-2.5 text-white/40 hover:text-white"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#351E28]/40 hover:text-[#351E28] cursor-pointer"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -135,7 +137,7 @@ export default function Products() {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full min-w-[140px] px-3 py-2 rounded-xl bg-white/8 border border-white/8 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
+              className="w-full min-w-[140px] px-3.5 py-2.5 rounded-xl bg-white border border-[#351E28]/15 text-xs text-[#351E28] font-sans focus:outline-hidden focus:border-luxury-gold focus:ring-2 focus:ring-luxury-gold/25 cursor-pointer shadow-xs"
             >
               <option value="">All Categories</option>
               {categories.map((cat) => (
@@ -149,7 +151,7 @@ export default function Products() {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full min-w-[120px] px-3 py-2 rounded-xl bg-white/8 border border-white/8 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
+              className="w-full min-w-[120px] px-3.5 py-2.5 rounded-xl bg-white border border-[#351E28]/15 text-xs text-[#351E28] font-sans focus:outline-hidden focus:border-luxury-gold focus:ring-2 focus:ring-luxury-gold/25 cursor-pointer shadow-xs"
             >
               <option value="">All Statuses</option>
               <option value="Published">Published</option>
@@ -162,7 +164,7 @@ export default function Products() {
             <select
               value={selectedStockStatus}
               onChange={(e) => setSelectedStockStatus(e.target.value)}
-              className="w-full min-w-[120px] px-3 py-2 rounded-xl bg-white/8 border border-white/8 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
+              className="w-full min-w-[120px] px-3.5 py-2.5 rounded-xl bg-white border border-[#351E28]/15 text-xs text-[#351E28] font-sans focus:outline-hidden focus:border-luxury-gold focus:ring-2 focus:ring-luxury-gold/25 cursor-pointer shadow-xs"
             >
               <option value="">Stock Level</option>
               <option value="in-stock">In Stock (&gt;0)</option>
@@ -179,7 +181,7 @@ export default function Products() {
                 setSelectedStatus("");
                 setSelectedStockStatus("");
               }}
-              className="px-4 py-2 text-[10px] tracking-wider uppercase font-bold text-luxury-gold hover:text-white transition-colors cursor-pointer"
+              className="px-4 py-2 text-[10px] tracking-wider uppercase font-bold text-luxury-gold hover:text-[#351E28] transition-colors cursor-pointer"
             >
               Reset
             </button>
