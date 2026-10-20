@@ -1,5 +1,5 @@
 
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Crown, TrendingUp, Sparkles } from "lucide-react";
 import Table from "../ui/Table";
 
 import { getImageUrl } from "../../services/api";
@@ -47,11 +47,28 @@ export default function ProductTable({
     {
       header: "Details",
       render: (prod: any) => (
-        <div className="text-left">
+        <div className="text-left space-y-1">
           <h3 className="font-serif text-sm text-white font-light line-clamp-1">{prod.name}</h3>
-          <span className="text-[8px] uppercase tracking-widest text-white/40 mt-1 block">
+          <span className="text-[8px] uppercase tracking-widest text-white/40 block font-mono">
             Category: {prod.category?.name || "N/A"}
           </span>
+          <div className="flex flex-wrap items-center gap-1.5 mt-1">
+            {prod.isFeatured && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[7.5px] font-bold uppercase tracking-wider bg-amber-400/15 text-amber-300 border border-amber-400/30">
+                <Crown className="w-2.5 h-2.5 text-amber-300" /> Featured
+              </span>
+            )}
+            {prod.isTrending && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[7.5px] font-bold uppercase tracking-wider bg-orange-500/15 text-orange-300 border border-orange-500/30">
+                <TrendingUp className="w-2.5 h-2.5 text-orange-300" /> Trending
+              </span>
+            )}
+            {prod.isBestSeller && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[7.5px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                <Sparkles className="w-2.5 h-2.5 text-emerald-300" /> Best Seller
+              </span>
+            )}
+          </div>
         </div>
       )
     },
