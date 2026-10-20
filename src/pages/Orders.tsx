@@ -3,7 +3,6 @@ import {
   Search,
   Eye,
   Loader2,
-  Truck,
   X,
   Clock,
   CheckCircle2,
@@ -62,15 +61,11 @@ export default function Orders() {
   // Details Modal State
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
-  const [modalLoading, setModalLoading] = useState(false);
 
   // Status Change State inside Modal
   const [newStatus, setNewStatus] = useState("");
   const [statusComment, setStatusComment] = useState("");
   const [statusUpdating, setStatusUpdating] = useState(false);
-
-  // Tracking URL state
-  const [trackingUrl, setTrackingUrl] = useState("");
 
   useEffect(() => {
     fetchOrders();
@@ -110,7 +105,6 @@ export default function Orders() {
     setSelectedOrder(order);
     setNewStatus(order.orderStatus || "Pending Confirmation");
     setStatusComment("");
-    setTrackingUrl(order.trackingUrl || "");
     setShowModal(true);
   };
 
@@ -156,52 +150,6 @@ export default function Orders() {
       toast.error(err.response?.data?.message || "Failed to update order status");
     } finally {
       setStatusUpdating(false);
-    }
-  };
-
-  const handleUpdateShipping = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedOrder) return;
-
-    let formattedUrl = trackingUrl.trim();
-    if (formattedUrl !== "") {
-      if (!formattedUrl.match(/^(https?:\/\/)/i)) {
-        formattedUrl = `https://${formattedUrl}`;
-      }
-
-      try {
-        const parsed = new URL(formattedUrl);
-        if (!parsed.hostname.includes(".")) {
-          throw new Error("Invalid domain name");
-        }
-      } catch (_) {
-        toast.error("Please enter a valid tracking URL (e.g. https://www.delhivery.com/track/package/123456789)");
-        return;
-      }
-    }
-
-    setModalLoading(true);
-    try {
-      const res = await putRequest(
-        `/orders/admin/${selectedOrder._id}/shipping`,
-        { trackingUrl: formattedUrl }
-      );
-
-      if (res.success) {
-        setSelectedOrder(res.order);
-        setTrackingUrl(formattedUrl);
-        fetchOrders();
-        if (formattedUrl === "") {
-          toast.success("Tracking URL cleared successfully.");
-        } else {
-          toast.success("Tracking URL updated successfully.");
-        }
-      }
-    } catch (err) {
-      console.error("Failed to update shipping", err);
-      toast.error(formattedUrl === "" ? "Failed to clear tracking URL." : "Failed to update tracking URL.");
-    } finally {
-      setModalLoading(false);
     }
   };
 
@@ -259,11 +207,6 @@ export default function Orders() {
       render: (order: any) => (
         <div>
           <span className="font-semibold text-xs">₹{order.grandTotal.toLocaleString("en-IN")}</span>
-          {order.discountAmount > 0 && (
-            <span className="text-emerald-600 text-[8.5px] block font-mono">
-              -₹{order.discountAmount.toLocaleString("en-IN")}
-            </span>
-          )}
         </div>
       )
     },
@@ -452,12 +395,6 @@ export default function Orders() {
                 <span className="text-[#351E28] font-semibold block text-base font-serif">
                   Grand Total: ₹{selectedOrder.grandTotal.toLocaleString("en-IN")}
                 </span>
-                {selectedOrder.discountAmount > 0 && (
-                  <span className="text-emerald-600 text-[10px] block font-mono">
-                    Discount Applied: -₹{selectedOrder.discountAmount.toLocaleString("en-IN")} (Subtotal: ₹
-                    {(selectedOrder.subtotal || 0).toLocaleString("en-IN")})
-                  </span>
-                )}
               </div>
             </div>
 
@@ -642,33 +579,7 @@ export default function Orders() {
                 </div>
               )}
 
-              {/* Shipping & Courier Tracking Form */}
-              <div className="border border-[#351E28]/10 p-4 rounded-xl bg-white/40">
-                <h3 className="font-serif text-sm text-[#351E28] mb-3 flex items-center gap-2">
-                  <Truck className="w-4.5 h-4.5 text-luxury-gold" /> Shipment Tracking URL
-                </h3>
-                <form onSubmit={handleUpdateShipping} className="space-y-3">
-                  <div>
-                    <label className="block text-[8px] tracking-wider uppercase text-[#351E28]/60 mb-1 font-semibold">
-                      Tracking URL
-                    </label>
-                    <input
-                      type="text"
-                      value={trackingUrl}
-                      onChange={(e) => setTrackingUrl(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-white border border-[#351E28]/15 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
-                      placeholder="https://www.delhivery.com/track/package/123456789"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={modalLoading}
-                    className="border border-[#351E28]/20 hover:border-luxury-gold hover:bg-[#351E28] hover:text-white text-[9.5px] uppercase tracking-wider font-bold py-2 px-6 rounded-full transition-all cursor-pointer"
-                  >
-                    {modalLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin mx-auto" /> : "Save Tracking URL"}
-                  </button>
-                </form>
-              </div>
+              {/* End of details */}
             </div>
           </div>
         </div>

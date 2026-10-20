@@ -19,6 +19,7 @@ export default function Products() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedStockStatus, setSelectedStockStatus] = useState("");
+  const [selectedHighlight, setSelectedHighlight] = useState("");
 
   // Custom Delete Confirm State
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -35,7 +36,7 @@ export default function Products() {
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, selectedCategory, selectedStatus, selectedStockStatus]);
+  }, [searchTerm, selectedCategory, selectedStatus, selectedStockStatus, selectedHighlight]);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -45,6 +46,7 @@ export default function Products() {
       if (selectedCategory) params.category = selectedCategory;
       if (selectedStatus) params.status = selectedStatus;
       if (selectedStockStatus) params.stockStatus = selectedStockStatus;
+      if (selectedHighlight) params.highlight = selectedHighlight;
 
       const res = await getRequest("/products/admin", { params });
       if (res.success) {
@@ -170,14 +172,29 @@ export default function Products() {
             </select>
           </div>
 
+          {/* Highlight Filter */}
+          <div className="flex-1 md:flex-initial">
+            <select
+              value={selectedHighlight}
+              onChange={(e) => setSelectedHighlight(e.target.value)}
+              className="w-full min-w-[130px] px-3 py-2 rounded-xl bg-white/8 border border-white/8 text-xs text-[#351E28] focus:border-luxury-gold focus:outline-hidden"
+            >
+              <option value="">All Highlights</option>
+              <option value="featured">Featured Masterpieces</option>
+              <option value="trending">Trending Designs</option>
+              <option value="bestseller">Best Sellers</option>
+            </select>
+          </div>
+
           {/* Reset Filters */}
-          {(searchTerm || selectedCategory || selectedStatus || selectedStockStatus) && (
+          {(searchTerm || selectedCategory || selectedStatus || selectedStockStatus || selectedHighlight) && (
             <button
               onClick={() => {
                 setSearchTerm("");
                 setSelectedCategory("");
                 setSelectedStatus("");
                 setSelectedStockStatus("");
+                setSelectedHighlight("");
               }}
               className="px-4 py-2 text-[10px] tracking-wider uppercase font-bold text-luxury-gold hover:text-white transition-colors cursor-pointer"
             >
