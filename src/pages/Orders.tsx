@@ -113,7 +113,7 @@ export default function Orders() {
     try {
       const res = await putRequest(`/orders/admin/${orderId}/status`, {
         status,
-        comment: `Status updated to ${status} from table dropdown`
+        comment: `Order status: ${status}`
       });
 
       if (res.success) {

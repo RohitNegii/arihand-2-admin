@@ -72,7 +72,7 @@ export default function Dashboard() {
     {
       header: "Order",
       className: "font-mono font-bold text-white",
-      render: (order: any) => <span>#{order.orderNumber.split("-")[1] || order.orderNumber}</span>
+      render: (order: any) => <span>#{order?.orderNumber || "N/A"}</span>
     },
     {
       header: "Customer",
@@ -81,7 +81,7 @@ export default function Dashboard() {
     {
       header: "Total",
       className: "font-mono text-white",
-      render: (order: any) => <span>INR {order.grandTotal.toLocaleString()}</span>
+      render: (order: any) => <span>INR {(order?.grandTotal ?? 0).toLocaleString()}</span>
     }
   ];
 

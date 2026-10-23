@@ -25,6 +25,7 @@ api.interceptors.response.use(
       const isLoginEndpoint = error.config && error.config.url && error.config.url.includes("/login");
       if (!isLoginEndpoint) {
         localStorage.removeItem("aurum_admin_token");
+        localStorage.removeItem("aurum_admin_user");
         window.location.href = "/login";
       }
     }
@@ -61,7 +62,7 @@ export const getImageUrl = (path: string) => {
   return `${baseUrl}${path.startsWith("/") ? "" : "/"}${path}`;
 };
 
-export const SITE_URL = import.meta.env.VITE_SITE_URL || "http://localhost:5001";
+export const SITE_URL = import.meta.env.VITE_SITE_URL || "https://api.geetejviraasat.com";
 
 // Homepage media may live on the backend (/uploads) or ship with the storefront (/images)
 export const resolveSiteMedia = (path: string) => {
