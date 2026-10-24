@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Plus, X } from "lucide-react";
 import ProductFormModal from "../components/products/ProductFormModal";
 import ProductTable from "../components/products/ProductTable";
 import DeleteConfirmModal from "../components/ui/DeleteConfirmModal";
+import Pagination from "../components/ui/Pagination";
 import { getRequest, deleteRequest } from "../services/api";
 
 export default function Products() {
@@ -21,6 +22,12 @@ export default function Products() {
   const [selectedStockStatus, setSelectedStockStatus] = useState("");
   const [selectedHighlight, setSelectedHighlight] = useState("");
 
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(15);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+
   // Custom Delete Confirm State
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
@@ -29,20 +36,14 @@ export default function Products() {
     fetchFilters();
   }, []);
 
-  // Debounced load products on search or filter updates
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      fetchProducts();
-    }, 300);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, selectedCategory, selectedStatus, selectedStockStatus, selectedHighlight]);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async (targetPage = page, targetLimit = limit) => {
     setLoading(true);
     try {
-      const params: any = {};
-      if (searchTerm) params.search = searchTerm;
+      const params: any = {
+        page: targetPage,
+        limit: targetLimit
+      };
+      if (searchTerm.trim()) params.search = searchTerm.trim();
       if (selectedCategory) params.category = selectedCategory;
       if (selectedStatus) params.status = selectedStatus;
       if (selectedStockStatus) params.stockStatus = selectedStockStatus;
@@ -50,13 +51,45 @@ export default function Products() {
 
       const res = await getRequest("/products/admin", { params });
       if (res.success) {
-        setProducts(res.products);
+        setProducts(res.products || []);
+        setTotalProducts(res.total ?? res.count ?? 0);
+        setTotalPages(res.totalPages || 1);
       }
     } catch (err) {
       console.error("Failed to load products", err);
     } finally {
       setLoading(false);
     }
+  }, [searchTerm, selectedCategory, selectedStatus, selectedStockStatus, selectedHighlight, page, limit]);
+
+  const isInitialMount = useRef(true);
+
+  // Debounced load products on search or filter updates (resets page to 1)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      fetchProducts(1, limit);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(() => {
+      setPage(1);
+      fetchProducts(1, limit);
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm, selectedCategory, selectedStatus, selectedStockStatus, selectedHighlight]);
+
+  // Handle page or limit changes
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    fetchProducts(newPage, limit);
+  };
+
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
+    setPage(1);
+    fetchProducts(1, newLimit);
   };
 
   const fetchFilters = async () => {
@@ -105,12 +138,17 @@ export default function Products() {
           </h1>
         </div>
 
-        <button
-          onClick={openCreateModal}
-          className="flex items-center gap-2 bg-[#C8A96A] hover:bg-[#B89858] text-[#351E28] px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all shadow-md hover:shadow-lg cursor-pointer hover:scale-102 active:scale-98"
-        >
-          <Plus className="w-4 h-4" /> Create Product
-        </button>
+        <div className="flex items-center gap-4">
+          <span className="text-xs font-mono text-[#351E28]/60">
+            Total Products: <span className="font-bold text-[#351E28]">{totalProducts}</span>
+          </span>
+          <button
+            onClick={openCreateModal}
+            className="flex items-center gap-2 bg-[#C8A96A] hover:bg-[#B89858] text-[#351E28] px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all shadow-md hover:shadow-lg cursor-pointer hover:scale-102 active:scale-98"
+          >
+            <Plus className="w-4 h-4" /> Create Product
+          </button>
+        </div>
       </div>
 
       {/* Search & Filter Bar */}
@@ -215,6 +253,18 @@ export default function Products() {
           onDelete={(id) => setDeleteConfirmId(id)}
         />
       </div>
+
+      {/* Pagination Bar */}
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={totalProducts}
+        limit={limit}
+        onPageChange={handlePageChange}
+        onLimitChange={handleLimitChange}
+        limits={[10, 15, 25, 50]}
+        itemLabel="products"
+      />
 
       {/* CRUD Product Modal */}
       <ProductFormModal

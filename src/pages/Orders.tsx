@@ -1,20 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Search,
   Eye,
   Loader2,
   X,
-  Clock,
   CheckCircle2,
-  AlertCircle,
-  PackageCheck,
-  ChevronLeft,
-  ChevronRight,
-  Filter,
-  ExternalLink
+  Filter
 } from "lucide-react";
 import { getRequest, putRequest, getImageUrl } from "../services/api";
 import Table from "../components/ui/Table";
+import Pagination from "../components/ui/Pagination";
 import { toast } from "sonner";
 
 export const ORDER_STATUSES = [
@@ -56,6 +51,7 @@ export default function Orders() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(15);
   const [totalPages, setTotalPages] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
 
@@ -68,18 +64,14 @@ export default function Orders() {
   const [statusComment, setStatusComment] = useState("");
   const [statusUpdating, setStatusUpdating] = useState(false);
 
-  useEffect(() => {
-    fetchOrders();
-  }, [page, statusFilter]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = async (targetPage = page, targetLimit = limit) => {
     setLoading(true);
     try {
       const queryParams = new URLSearchParams();
       if (search.trim()) queryParams.set("search", search.trim());
       if (statusFilter !== "ALL") queryParams.set("status", statusFilter);
-      queryParams.set("page", String(page));
-      queryParams.set("limit", "15");
+      queryParams.set("page", String(targetPage));
+      queryParams.set("limit", String(targetLimit));
 
       const res = await getRequest(`/orders/admin/list?${queryParams.toString()}`);
 
@@ -96,10 +88,17 @@ export default function Orders() {
     }
   };
 
+  useEffect(() => {
+    fetchOrders(page, limit);
+  }, [page, limit, statusFilter]);
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setPage(1);
-    fetchOrders();
+    if (page === 1) {
+      fetchOrders(1, limit);
+    } else {
+      setPage(1);
+    }
   };
 
   const handleOpenOrder = async (order: any) => {
@@ -290,8 +289,22 @@ export default function Orders() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by order ID, customer name, phone, email..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#F7F2EE]/60 border border-[#351E28]/15 text-xs text-[#351E28] placeholder-[#351E28]/35 focus:outline-hidden focus:border-luxury-gold focus:ring-2 focus:ring-luxury-gold/25 focus:bg-white transition-all font-sans"
+              className="w-full pl-10 pr-9 py-2.5 rounded-xl bg-[#F7F2EE]/60 border border-[#351E28]/15 text-xs text-[#351E28] placeholder-[#351E28]/35 focus:outline-hidden focus:border-luxury-gold focus:ring-2 focus:ring-luxury-gold/25 focus:bg-white transition-all font-sans"
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  setPage(1);
+                  fetchOrders(1, limit);
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#351E28]/40 hover:text-[#351E28] cursor-pointer"
+                title="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
           <button
             type="submit"
@@ -337,30 +350,23 @@ export default function Orders() {
       </div>
 
       {/* Pagination Bar */}
-      {totalPages > 1 && (
-        <div className="shrink-0 flex items-center justify-between py-2 text-xs font-sans text-[#351E28]/70">
-          <span>
-            Showing page {page} of {totalPages} ({totalOrders} total orders)
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className="p-2 rounded-lg border border-[#351E28]/15 bg-white/60 hover:bg-[#351E28]/5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <span className="font-mono text-xs px-2 font-bold">{page}</span>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-              className="p-2 rounded-lg border border-[#351E28]/15 bg-white/60 hover:bg-[#351E28]/5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={totalOrders}
+        limit={limit}
+        onPageChange={(newPage) => {
+          setPage(newPage);
+          fetchOrders(newPage, limit);
+        }}
+        onLimitChange={(newLimit) => {
+          setLimit(newLimit);
+          setPage(1);
+          fetchOrders(1, newLimit);
+        }}
+        limits={[10, 15, 25, 50]}
+        itemLabel="orders"
+      />
 
       {/* Order Details Drawer / Modal */}
       {showModal && selectedOrder && (
