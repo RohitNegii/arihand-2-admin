@@ -859,7 +859,8 @@ export default function ProductFormModal({
                                     htmlFor={`variant-media-upload-${index}`}
                                     className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-[#351E28]/15 hover:border-luxury-gold hover:bg-[#351E28]/5 text-[10px] uppercase font-bold text-[#351E28] cursor-pointer transition-colors shadow-2xs"
                                   >
-                                    <Upload className="w-3 h-3 text-luxury-gold" /> Upload Media
+                                    <Upload className="w-3 h-3 text-luxury-gold" />
+                                    <span className="text-[#351E28]">Upload Media</span>
                                   </label>
                                 </div>
                               </div>
@@ -1349,9 +1350,13 @@ export default function ProductFormModal({
                   />
                   <label
                     htmlFor="gallery-file-upload-main"
-                    className="inline-flex items-center gap-2 bg-[#351E28] hover:bg-[#2A161F] text-white hover:text-luxury-gold px-6 py-2.5 rounded-full text-xs font-mono font-bold uppercase tracking-wider cursor-pointer transition-all shadow-md hover:shadow-lg"
+                    className="group inline-flex items-center gap-2 bg-[#351E28] hover:bg-[#2A161F] !text-white hover:!text-luxury-gold px-6 py-2.5 rounded-full text-xs font-mono font-bold uppercase tracking-wider cursor-pointer transition-all shadow-md hover:shadow-lg select-none"
+                    style={{ color: "#FFFFFF" }}
                   >
-                    <Plus className="w-4 h-4" /> Select Media Files
+                    <Upload className="w-4 h-4 text-luxury-gold transition-transform group-hover:scale-110" />
+                    <span className="!text-white group-hover:!text-luxury-gold transition-colors">
+                      Upload Jewelry Media
+                    </span>
                   </label>
                 </div>
 

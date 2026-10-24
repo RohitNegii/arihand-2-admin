@@ -12,18 +12,25 @@ interface TableProps<T> {
   data: T[];
   loading?: boolean;
   emptyMessage?: string;
+  className?: string;
+  minWidth?: string;
 }
 
 export default function Table<T>({
   columns,
   data,
   loading = false,
-  emptyMessage = "No records found."
+  emptyMessage = "No records found.",
+  className = "",
+  minWidth
 }: TableProps<T>) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-luxury-border bg-white/60 shadow-[0_8px_32px_rgba(53,30,40,0.03)] backdrop-blur-md flex flex-col h-full">
-      <div className="overflow-y-auto overflow-x-auto flex-1 custom-scrollbar min-h-0">
-        <table className="w-full text-xs border-collapse relative">
+    <div className={`overflow-hidden rounded-2xl border border-luxury-border bg-white/60 shadow-[0_8px_32px_rgba(53,30,40,0.03)] backdrop-blur-md flex flex-col h-full min-h-0 ${className}`}>
+      <div className="overflow-y-auto overflow-x-auto flex-1 custom-scrollbar min-h-0 overscroll-contain">
+        <table
+          className="w-full min-w-full text-xs border-collapse relative"
+          style={minWidth ? { minWidth } : undefined}
+        >
           <thead className="sticky top-0 z-10 bg-[#EDE5DD]">
             <tr className="bg-[#351E28]/5 border-b border-luxury-border text-[#351E28]/70 uppercase text-[9px] tracking-wider text-left">
               {columns.map((col, idx) => (

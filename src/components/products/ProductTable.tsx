@@ -158,13 +158,12 @@ export default function ProductTable({
   ];
 
   return (
-    <div className="glass-card rounded-2xl overflow-hidden">
-      <Table
-        columns={columns}
-        data={products}
-        loading={loading}
-        emptyMessage="No products found matching criteria."
-      />
-    </div>
+    <Table
+      columns={columns}
+      data={products}
+      loading={loading}
+      emptyMessage="No products found matching criteria."
+      minWidth="750px"
+    />
   );
 }

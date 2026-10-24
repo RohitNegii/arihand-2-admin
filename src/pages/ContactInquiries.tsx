@@ -127,12 +127,13 @@ export default function ContactInquiries() {
       </div>
 
       {/* INQUIRIES LIST / DATA TABLE */}
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 flex flex-col">
         <Table
           columns={columns}
           data={inquiries}
           loading={loading}
           emptyMessage="No Inquiries Found"
+          minWidth="700px"
         />
       </div>
 

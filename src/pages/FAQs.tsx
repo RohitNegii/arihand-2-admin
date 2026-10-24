@@ -181,12 +181,13 @@ export default function FAQs() {
       </div>
 
       {/* FAQs List Table */}
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 flex flex-col">
         <Table
           columns={columns}
           data={faqs}
           loading={loading}
           emptyMessage="No FAQs defined."
+          minWidth="600px"
         />
       </div>
 

@@ -326,12 +326,13 @@ export default function Orders() {
       </div>
 
       {/* Orders Table */}
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 flex flex-col">
         <Table
           columns={columns}
           data={orders}
           loading={loading}
           emptyMessage="No orders found matching the criteria."
+          minWidth="900px"
         />
       </div>
 

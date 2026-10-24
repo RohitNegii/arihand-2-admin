@@ -225,12 +225,15 @@ export default function Dashboard() {
             </Link>
           </div>
 
-          <Table
-            columns={recentOrdersColumns}
-            data={recentOrders}
-            loading={loading}
-            emptyMessage="No orders registered"
-          />
+          <div className="h-[360px] flex flex-col min-h-0">
+            <Table
+              columns={recentOrdersColumns}
+              data={recentOrders}
+              loading={loading}
+              emptyMessage="No orders registered"
+              minWidth="500px"
+            />
+          </div>
         </div>
 
         {/* Low Stock Alerts */}
@@ -245,12 +248,15 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <Table
-            columns={lowStockColumns}
-            data={lowStock}
-            loading={loading}
-            emptyMessage="All stock limits verified"
-          />
+          <div className="h-[360px] flex flex-col min-h-0">
+            <Table
+              columns={lowStockColumns}
+              data={lowStock}
+              loading={loading}
+              emptyMessage="All stock limits verified"
+              minWidth="500px"
+            />
+          </div>
         </div>
 
       </div>
