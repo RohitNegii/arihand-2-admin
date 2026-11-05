@@ -518,7 +518,7 @@ export default function HomepageMedia() {
               value={editAlt}
               onChange={(e) => setEditAlt(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#351E28]/15 text-xs text-[#351E28] placeholder-[#351E28]/35 focus:outline-hidden focus:border-luxury-gold focus:ring-2 focus:ring-luxury-gold/25 transition-all leading-relaxed"
-              placeholder="e.g. Handcrafted 22K gold necklace with fine uncut diamonds and pearls"
+              placeholder="e.g. Handcrafted 925 sterling silver necklace with fine artisanal detailing"
             />
             <p className="text-[10px] text-[#351E28]/45 mt-1">
               Helps with storefront screen readers and SEO rankings.

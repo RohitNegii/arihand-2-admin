@@ -6,11 +6,14 @@ import {
   X,
   CheckCircle2,
   Filter,
-  Clock
+  Clock,
+  PackageCheck,
+  Package
 } from "lucide-react";
 import { getRequest, putRequest, getImageUrl } from "../services/api";
 import Table from "../components/ui/Table";
 import Pagination from "../components/ui/Pagination";
+import DeliverySlipModal from "../components/orders/DeliverySlipModal";
 import { toast } from "sonner";
 
 export const ORDER_STATUSES = [
@@ -59,6 +62,15 @@ export default function Orders() {
   // Details Modal State
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
+
+  // Delivery Slip / Box Label State
+  const [slipOrder, setSlipOrder] = useState<any>(null);
+  const [showSlipModal, setShowSlipModal] = useState(false);
+
+  const handleOpenSlip = (order: any) => {
+    setSlipOrder(order);
+    setShowSlipModal(true);
+  };
 
   // Status Change State inside Modal
   const [newStatus, setNewStatus] = useState("");
@@ -247,7 +259,14 @@ export default function Orders() {
       header: "Actions",
       className: "text-right",
       render: (order: any) => (
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-1.5">
+          <button
+            onClick={() => handleOpenSlip(order)}
+            className="p-2 rounded-lg hover:bg-luxury-gold/15 text-[#351E28]/70 hover:text-luxury-gold transition-colors cursor-pointer"
+            title="Download / Print Box Delivery Slip (Amazon-style Label)"
+          >
+            <PackageCheck className="w-4 h-4 text-luxury-gold" />
+          </button>
           <button
             onClick={() => handleOpenOrder(order)}
             className="p-2 rounded-lg hover:bg-[#351E28]/5 text-[#351E28]/70 hover:text-luxury-gold transition-colors cursor-pointer"
@@ -401,10 +420,19 @@ export default function Orders() {
                   Placed: {new Date(selectedOrder.createdAt).toLocaleString()}
                 </span>
               </div>
-              <div className="text-left sm:text-right">
+              <div className="flex flex-col sm:items-end gap-2 text-left sm:text-right">
                 <span className="text-[#351E28] font-serif text-lg font-normal block">
                   Grand Total: <span className="font-semibold text-xl">₹{selectedOrder.grandTotal.toLocaleString("en-IN")}</span>
                 </span>
+                <button
+                  type="button"
+                  onClick={() => handleOpenSlip(selectedOrder)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-luxury-gold/15 hover:bg-luxury-gold/25 border border-luxury-gold/40 text-[#351E28] font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                  title="Download or print box delivery details / shipping label"
+                >
+                  <PackageCheck className="w-3.5 h-3.5 text-luxury-gold" />
+                  <span>Download Box Delivery Label</span>
+                </button>
               </div>
             </div>
 
@@ -533,6 +561,16 @@ export default function Orders() {
                     <p>Phone: <span className="font-bold text-[#351E28]">{selectedOrder.shippingAddress?.phone}</span></p>
                     {selectedOrder.email && <p>Email: {selectedOrder.email}</p>}
                   </div>
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenSlip(selectedOrder)}
+                      className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-[#351E28] hover:bg-[#2A161F] text-white hover:text-luxury-gold text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                    >
+                      <PackageCheck className="w-3.5 h-3.5" />
+                      <span>Print Box Shipping Slip</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Billing */}
@@ -603,6 +641,16 @@ export default function Orders() {
           </div>
         </div>
       )}
+
+      {/* Parcel Box Delivery Slip & Shipping Label Modal */}
+      <DeliverySlipModal
+        order={slipOrder}
+        isOpen={showSlipModal}
+        onClose={() => {
+          setShowSlipModal(false);
+          setSlipOrder(null);
+        }}
+      />
     </div>
   );
 }

@@ -56,8 +56,8 @@ export default function ProductFormModal({
   const [description, setDescription] = useState("");
   const [shortDescription, setShortDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
-  const [material, setMaterial] = useState("Gold");
-  const [purity, setPurity] = useState("18K");
+  const [material, setMaterial] = useState("92.5 Sterling Silver");
+  const [purity, setPurity] = useState("92.5");
   const [weight, setWeight] = useState(0);
   const [dimensions, setDimensions] = useState("");
   const [gender, setGender] = useState<"Men" | "Women" | "Unisex">("Unisex");
@@ -130,8 +130,8 @@ export default function ProductFormModal({
         setDescription(product.description || "");
         setShortDescription(product.shortDescription || "");
         setCategoryId(product.category?._id || product.category || categories[0]?._id || "");
-        setMaterial(product.material || "Gold");
-        setPurity(product.purity || "18K");
+        setMaterial(product.material || "92.5 Sterling Silver");
+        setPurity(product.purity || "92.5");
         setWeight(product.weight || 0);
         setDimensions(product.dimensions || "");
         setGender(product.gender || "Unisex");
@@ -154,8 +154,8 @@ export default function ProductFormModal({
         setDescription("");
         setShortDescription("");
         setCategoryId(categories[0]?._id || categories[0] || "");
-        setMaterial("Gold");
-        setPurity("18K");
+        setMaterial("Silver");
+        setPurity("925");
         setWeight(0);
         setDimensions("");
         setGender("Unisex");
@@ -752,7 +752,7 @@ export default function ProductFormModal({
                                     newVars[index].name = e.target.value;
                                     setVariants(newVars);
                                   }}
-                                  placeholder="e.g. 18K Yellow Gold / Size 7"
+                                  placeholder="e.g. 925 Sterling Silver / Size 7"
                                   className="w-full px-3 py-2 rounded-xl bg-[#F7F2EE]/50 border border-[#351E28]/15 text-xs text-[#351E28] focus:outline-hidden focus:border-luxury-gold focus:ring-2 focus:ring-luxury-gold/25 font-sans"
                                   required
                                 />
@@ -937,9 +937,9 @@ export default function ProductFormModal({
                     className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#351E28]/15 text-xs text-[#351E28] font-sans focus:outline-hidden focus:border-luxury-gold focus:ring-2 focus:ring-luxury-gold/25 cursor-pointer"
                     required
                   >
-                    {!["Gold", "Platinum", "Silver", "Rose Gold", "White Gold", "Brass"].includes(material) &&
+                    {!["92.5 Sterling Silver", "Sterling Silver", "92.5 Silver", "Oxidised 92.5 Silver", "Fine Silver"].includes(material) &&
                       material && <option value={material}>{material}</option>}
-                    {["Gold", "Platinum", "Silver", "Rose Gold", "White Gold", "Brass"].map((opt) => (
+                    {["92.5 Sterling Silver", "Sterling Silver", "92.5 Silver", "Oxidised 92.5 Silver", "Fine Silver"].map((opt) => (
                       <option key={opt} value={opt}>
                         {opt}
                       </option>
@@ -959,15 +959,15 @@ export default function ProductFormModal({
                     required
                   >
                     {![
-                      "18K",
-                      "22K",
-                      "14K",
-                      "24K",
-                      "950 Platinum",
-                      "925 Sterling Silver"
+                      "92.5",
+                      "92.5%",
+                      "925",
+                      "92.5 Silver",
+                      "925 Sterling Silver",
+                      "999 Fine Silver"
                     ].includes(purity) &&
                       purity && <option value={purity}>{purity}</option>}
-                    {["18K", "22K", "14K", "24K", "950 Platinum", "925 Sterling Silver"].map((opt) => (
+                    {["92.5", "92.5%", "925", "92.5 Silver", "925 Sterling Silver", "999 Fine Silver"].map((opt) => (
                       <option key={opt} value={opt}>
                         {opt}
                       </option>

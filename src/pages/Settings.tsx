@@ -295,7 +295,7 @@ export default function Settings() {
                   type="text"
                   value={whatsappNumber}
                   onChange={(e) => setWhatsappNumber(e.target.value)}
-                  placeholder="e.g. +91 98765 43210 or 919876543210"
+                  placeholder="e.g. +91 9494600505 or 919494600505"
                   required
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#F7F2EE]/50 border border-[#351E28]/15 text-xs text-[#351E28] placeholder-[#351E28]/35 focus:outline-hidden focus:border-luxury-gold focus:ring-2 focus:ring-luxury-gold/25 focus:bg-white transition-all font-mono"
                 />
