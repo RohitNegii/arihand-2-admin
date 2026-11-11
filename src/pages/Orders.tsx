@@ -8,12 +8,14 @@ import {
   Filter,
   Clock,
   PackageCheck,
-  Package
+  Package,
+  Trash2
 } from "lucide-react";
-import { getRequest, putRequest, getImageUrl } from "../services/api";
+import { getRequest, putRequest, deleteRequest, getImageUrl } from "../services/api";
 import Table from "../components/ui/Table";
 import Pagination from "../components/ui/Pagination";
 import DeliverySlipModal from "../components/orders/DeliverySlipModal";
+import DeleteConfirmModal from "../components/ui/DeleteConfirmModal";
 import { toast } from "sonner";
 
 export const ORDER_STATUSES = [
@@ -76,6 +78,32 @@ export default function Orders() {
   const [newStatus, setNewStatus] = useState("");
   const [statusComment, setStatusComment] = useState("");
   const [statusUpdating, setStatusUpdating] = useState(false);
+
+  // Delete Order State
+  const [deleteConfirmOrder, setDeleteConfirmOrder] = useState<any>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const handleDeleteOrder = async () => {
+    if (!deleteConfirmOrder) return;
+    setDeleteLoading(true);
+    try {
+      const res = await deleteRequest(`/orders/admin/${deleteConfirmOrder._id}`);
+      if (res.success) {
+        toast.success(res.message || "Order deleted successfully from everywhere.");
+        setDeleteConfirmOrder(null);
+        if (selectedOrder && selectedOrder._id === deleteConfirmOrder._id) {
+          setShowModal(false);
+          setSelectedOrder(null);
+        }
+        fetchOrders();
+      }
+    } catch (err: any) {
+      console.error("Failed to delete order", err);
+      toast.error(err.response?.data?.message || "Failed to delete order. Please try again.");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   const fetchOrders = async (targetPage = page, targetLimit = limit) => {
     setLoading(true);
@@ -259,7 +287,7 @@ export default function Orders() {
       header: "Actions",
       className: "text-right",
       render: (order: any) => (
-        <div className="flex justify-end gap-1.5">
+        <div className="flex justify-end gap-1.5 items-center">
           <button
             onClick={() => handleOpenSlip(order)}
             className="p-2 rounded-lg hover:bg-luxury-gold/15 text-[#351E28]/70 hover:text-luxury-gold transition-colors cursor-pointer"
@@ -273,6 +301,16 @@ export default function Orders() {
             title="View Order Details"
           >
             <Eye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setDeleteConfirmOrder(order);
+            }}
+            className="p-2 rounded-lg hover:bg-rose-50 text-rose-500/70 hover:text-rose-600 transition-colors cursor-pointer"
+            title="Delete Order (from everywhere)"
+          >
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       )
@@ -424,15 +462,26 @@ export default function Orders() {
                 <span className="text-[#351E28] font-serif text-lg font-normal block">
                   Grand Total: <span className="font-semibold text-xl">₹{selectedOrder.grandTotal.toLocaleString("en-IN")}</span>
                 </span>
-                <button
-                  type="button"
-                  onClick={() => handleOpenSlip(selectedOrder)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-luxury-gold/15 hover:bg-luxury-gold/25 border border-luxury-gold/40 text-[#351E28] font-bold text-xs transition-all cursor-pointer shadow-2xs"
-                  title="Download or print box delivery details / shipping label"
-                >
-                  <PackageCheck className="w-3.5 h-3.5 text-luxury-gold" />
-                  <span>Download Box Delivery Label</span>
-                </button>
+                <div className="flex items-center gap-2 flex-wrap sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenSlip(selectedOrder)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-luxury-gold/15 hover:bg-luxury-gold/25 border border-luxury-gold/40 text-[#351E28] font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                    title="Download or print box delivery details / shipping label"
+                  >
+                    <PackageCheck className="w-3.5 h-3.5 text-luxury-gold" />
+                    <span>Download Box Delivery Label</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteConfirmOrder(selectedOrder)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold text-xs transition-all cursor-pointer shadow-2xs"
+                    title="Permanently delete this order from everywhere"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                    <span>Delete Order</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -650,6 +699,17 @@ export default function Orders() {
           setShowSlipModal(false);
           setSlipOrder(null);
         }}
+      />
+
+      {/* Delete Order Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={!!deleteConfirmOrder}
+        onClose={() => setDeleteConfirmOrder(null)}
+        onConfirm={handleDeleteOrder}
+        loading={deleteLoading}
+        title={`Delete Order #${deleteConfirmOrder?.orderNumber || ""}`}
+        message={`Are you sure you want to permanently delete order #${deleteConfirmOrder?.orderNumber || ""}? This will remove the order completely from everywhere (customer account, admin records, and database). If inventory stock was deducted, it will be automatically restored.`}
+        confirmText="Delete Order"
       />
     </div>
   );

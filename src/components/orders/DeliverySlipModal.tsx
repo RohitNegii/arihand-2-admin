@@ -401,7 +401,7 @@ export default function DeliverySlipModal({
               </p>
               <p>1848 Arihant Jewellers, Agra Road, Dhule, Maharashtra &ndash; 424001, India</p>
               <p className="font-mono text-[8px] text-gray-700">
-                Tel: 02562-238018 &bull; WhatsApp: +91 9494600505 &bull; geetejviraasat@gmail.com
+                Tel: +91 9494600505 &bull; WhatsApp: +91 9494600505 &bull; admin@geetejviraasat.com
               </p>
             </div>
 
